@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Target, Bell, Download, Calculator, Home } from "lucide-react";
+import { Calendar, Target, Bell, Download, Calculator, Home, BookOpen, Heart } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import {
@@ -25,6 +25,11 @@ const calendarItems = [
   { title: "Goal Planning", url: "/calendar/goals", icon: Target },
   { title: "Reminders", url: "/calendar/reminders", icon: Bell },
   { title: "Export", url: "/calendar/export", icon: Download },
+];
+
+const educationItems = [
+  { title: "Framework Steps", url: "/framework", icon: BookOpen },
+  { title: "Daily Devotionals", url: "/devotionals", icon: Heart },
 ];
 
 export function AppSidebar() {
@@ -65,6 +70,24 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {calendarItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end className={getNavCls}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Education</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {educationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
