@@ -22,6 +22,7 @@ import {
   Heart
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 interface Skill {
   id: string;
@@ -55,7 +56,7 @@ interface Opportunity {
 export function IncomeOptimization() {
   const { toast } = useToast();
   
-  const [skills, setSkills] = useState<Skill[]>([
+  const [skills, setSkills] = useLocalStorage<Skill[]>("income-optimization-skills", [
     {
       id: "1",
       name: "Web Design",
@@ -74,7 +75,7 @@ export function IncomeOptimization() {
     }
   ]);
 
-  const [assets, setAssets] = useState<Asset[]>([
+  const [assets, setAssets] = useLocalStorage<Asset[]>("income-optimization-assets", [
     {
       id: "1",
       name: "Spare Bedroom",
