@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,7 @@ interface ExpenseCategory {
 export function EmergencyFundCalculator() {
   const { toast } = useToast();
   
-  const [expenses, setExpenses] = useState<ExpenseCategory[]>([
+  const [expenses, setExpenses] = useLocalStorage<ExpenseCategory[]>("emergency-fund-expenses", [
     { id: "housing", name: "Housing (Rent/Mortgage)", icon: Home, amount: 0, required: true },
     { id: "utilities", name: "Utilities", icon: Zap, amount: 0, required: true },
     { id: "food", name: "Groceries & Food", icon: Utensils, amount: 0, required: true },

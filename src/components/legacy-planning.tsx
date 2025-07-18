@@ -1,4 +1,5 @@
 import { useState } from "react";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +53,7 @@ interface WealthBuildingStep {
 export function LegacyPlanning() {
   const { toast } = useToast();
   
-  const [legacyGoals, setLegacyGoals] = useState<LegacyGoal[]>([
+  const [legacyGoals, setLegacyGoals] = useLocalStorage<LegacyGoal[]>("legacy-goals", [
     {
       id: "1",
       name: "Children's College Fund",

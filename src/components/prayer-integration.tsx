@@ -1,4 +1,5 @@
 import { useState } from "react";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -114,8 +115,8 @@ const categoryIcons = {
 
 export function PrayerIntegration() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [personalPrayers, setPersonalPrayers] = useState<string[]>([]);
+  const [favorites, setFavorites] = useLocalStorage<string[]>("prayer-favorites", []);
+  const [personalPrayers, setPersonalPrayers] = useLocalStorage<string[]>("personal-prayers", []);
   const [newPrayer, setNewPrayer] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedPrayers, setExpandedPrayers] = useState<string[]>([]);

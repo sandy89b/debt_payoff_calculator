@@ -1,4 +1,5 @@
 import { useState } from "react";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +48,7 @@ interface GivingGoal {
 export function GivingStewardshipTracker() {
   const { toast } = useToast();
   
-  const [givingRecords, setGivingRecords] = useState<GivingRecord[]>([
+  const [givingRecords, setGivingRecords] = useLocalStorage<GivingRecord[]>("giving-records", [
     {
       id: "1",
       date: new Date("2024-03-01"),
@@ -74,7 +75,7 @@ export function GivingStewardshipTracker() {
     }
   ]);
 
-  const [givingGoals, setGivingGoals] = useState<GivingGoal[]>([
+  const [givingGoals, setGivingGoals] = useLocalStorage<GivingGoal[]>("giving-goals", [
     {
       id: "1",
       name: "Monthly Tithe (10%)",

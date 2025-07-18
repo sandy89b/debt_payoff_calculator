@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,8 +90,8 @@ const devotionals = [
 
 export function DailyDevotionals() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [favorites, setFavorites] = useState<number[]>([]);
-  const [readDevotionals, setReadDevotionals] = useState<string[]>([]);
+  const [favorites, setFavorites] = useLocalStorage<number[]>("devotional-favorites", []);
+  const [readDevotionals, setReadDevotionals] = useLocalStorage<string[]>("devotional-read", []);
 
   // Get devotional for current date (cycles through based on day of year)
   const getDailyDevotional = (date: Date) => {
