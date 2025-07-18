@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Target, Bell, Download, Calculator, Home, BookOpen, Heart, Trophy, Users, TrendingUp, Shield, DollarSign, Crown, GraduationCap } from "lucide-react";
+import { Calendar, Target, Bell, Download, Calculator, Home, BookOpen, Heart, Trophy, Users, TrendingUp, Shield, DollarSign, Crown, GraduationCap, HelpCircle } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import {
@@ -18,6 +18,7 @@ import {
 const mainItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Calculator", url: "/calculator", icon: Calculator },
+  { title: "User Guide", url: "/user-guide", icon: HelpCircle },
 ];
 
 const calendarItems = [

@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import UserGuidePage from "./pages/UserGuide";
 import { PaymentCalendar } from "@/components/calendar/payment-calendar";
 import { GoalPlanning } from "@/components/calendar/goal-planning";
 import { Reminders } from "@/components/calendar/reminders";
@@ -52,6 +53,7 @@ const App = () => {
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/calculator" element={<Index />} />
+                      <Route path="/user-guide" element={<UserGuidePage />} />
                       <Route path="/calendar" element={<PaymentCalendar debts={debts} />} />
                       <Route path="/calendar/goals" element={<GoalPlanning debts={debts} />} />
                       <Route path="/calendar/reminders" element={<Reminders debts={debts} />} />
