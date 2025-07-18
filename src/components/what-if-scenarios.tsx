@@ -14,10 +14,14 @@ import {
   Percent,
   Zap,
   AlertTriangle,
-  Gift
+  Gift,
+  BarChart3,
+  Target
 } from 'lucide-react';
 import { calculatePayoffStrategies } from './debt-calculator/PayoffCalculator';
 import { Debt } from './debt-calculator/DebtEntry';
+import { AdvancedScenarioBuilder } from './advanced-scenario-builder';
+import { GoalBasedPlanner } from './goal-based-planner';
 
 interface WhatIfScenariosProps {
   debts: Debt[];
@@ -148,9 +152,11 @@ export const WhatIfScenarios: React.FC<WhatIfScenariosProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="scenarios" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="scenarios">Quick Scenarios</TabsTrigger>
             <TabsTrigger value="custom">Custom Calculator</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced Builder</TabsTrigger>
+            <TabsTrigger value="goals">Goal Planning</TabsTrigger>
           </TabsList>
           
           <TabsContent value="scenarios" className="space-y-4">
@@ -307,6 +313,24 @@ export const WhatIfScenarios: React.FC<WhatIfScenariosProps> = ({
                 </div>
               </div>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="advanced" className="space-y-4">
+            <AdvancedScenarioBuilder 
+              debts={debts}
+              baseExtraPayment={baseExtraPayment}
+              onScenarioSelect={(scenario) => {
+                onScenarioSelect?.(scenario.extraPayment);
+              }}
+            />
+          </TabsContent>
+          
+          <TabsContent value="goals" className="space-y-4">
+            <GoalBasedPlanner 
+              debts={debts}
+              baseExtraPayment={baseExtraPayment}
+              onGoalSelect={onScenarioSelect}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
