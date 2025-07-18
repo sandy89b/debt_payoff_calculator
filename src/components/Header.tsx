@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone, Mail, Globe } from 'lucide-react';
+import { Phone, Mail, Globe, HelpCircle } from 'lucide-react';
+import { ThemeToggle } from './theme-toggle';
 
 export const Header: React.FC = () => {
   return (
@@ -25,18 +26,18 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Contact Info & CTA */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 lg:space-x-4">
             <div className="hidden lg:flex items-center space-x-6 text-sm text-brand-gray">
               <a 
                 href="tel:+1234567890" 
-                className="flex items-center space-x-1 hover:text-brand-green transition-colors"
+                className="flex items-center space-x-1 hover:text-brand-green transition-colors touch-target"
               >
                 <Phone className="h-4 w-4" />
                 <span>(123) 456-7890</span>
               </a>
               <a 
                 href="mailto:info@legacymindsetsolutions.com" 
-                className="flex items-center space-x-1 hover:text-brand-green transition-colors"
+                className="flex items-center space-x-1 hover:text-brand-green transition-colors touch-target"
               >
                 <Mail className="h-4 w-4" />
                 <span>Contact Us</span>
@@ -45,18 +46,21 @@ export const Header: React.FC = () => {
                 href="https://legacymindsetsolutions.com" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-1 hover:text-brand-green transition-colors"
+                className="flex items-center space-x-1 hover:text-brand-green transition-colors touch-target"
               >
                 <Globe className="h-4 w-4" />
                 <span>Website</span>
               </a>
             </div>
             
+            <ThemeToggle />
+            
             <Button 
-              className="bg-gradient-hero hover:opacity-90 text-white font-semibold"
+              className="bg-gradient-hero hover:opacity-90 text-white font-semibold touch-target px-3 lg:px-4"
               onClick={() => window.open('https://legacymindsetsolutions.com/contact', '_blank')}
             >
-              Free Consultation
+              <span className="hidden sm:inline">Free Consultation</span>
+              <span className="sm:hidden">Contact</span>
             </Button>
           </div>
         </div>

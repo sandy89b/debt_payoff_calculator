@@ -137,4 +137,16 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Mobile-first touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Enhanced mobile interactions */
+  @media (max-width: 768px) {
+    .touch-target {
+      @apply p-3 text-base;
+    }
+  }
 }

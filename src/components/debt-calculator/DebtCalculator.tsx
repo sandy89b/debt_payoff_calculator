@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calculator, DollarSign } from 'lucide-react';
+import { Plus, Calculator, DollarSign, BookOpen, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,8 @@ import { BiblicalVerse } from './BiblicalVerse';
 import { PayoffComparison } from './PayoffComparison';
 import { DebtProgress } from './DebtProgress';
 import { calculatePayoffStrategies } from './PayoffCalculator';
+import { OnboardingWizard } from '../onboarding-wizard';
+import { ProgressDashboard } from '../progress-dashboard';
 
 export const DebtCalculator: React.FC = () => {
   const { toast } = useToast();
@@ -27,6 +29,12 @@ export const DebtCalculator: React.FC = () => {
     snowball: any;
     avalanche: any;
   } | null>(null);
+  
+  // Onboarding and progress state
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   const addDebt = () => {
     const newDebt: Debt = {
@@ -90,36 +98,72 @@ export const DebtCalculator: React.FC = () => {
     }
   }, [debts, extraPayment]);
 
+  // Check if user should see onboarding
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('pourPayoffPlannerVisited');
+    if (!hasVisited && !hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, [hasSeenOnboarding]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    setHasSeenOnboarding(true);
+    localStorage.setItem('pourPayoffPlannerVisited', 'true');
+    toast({
+      title: "Welcome to your journey!",
+      description: "Let's start by adding your debts and creating your payoff plan.",
+    });
+  };
+
+  const startOnboarding = () => {
+    setShowOnboarding(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-brand-green/5">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
+      <div className="max-w-7xl mx-auto p-3 md:p-6 space-y-6 md:space-y-8">
         {/* Hero Section */}
-        <div className="text-center space-y-6 py-12">
+        <div className="text-center space-y-4 md:space-y-6 py-6 md:py-12">
           <div className="animate-fade-in">
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-hero bg-clip-text text-transparent mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-hero bg-clip-text text-transparent mb-4">
               The Pour & Payoff Planner™
             </h1>
-            <p className="text-xl text-brand-gray max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-brand-gray max-w-3xl mx-auto leading-relaxed px-4">
               "Use what's in your house to cancel what you owe and create what you need."
             </p>
-            <p className="text-lg text-brand-gray/80 max-w-2xl mx-auto mt-2">
+            <p className="text-base md:text-lg text-brand-gray/80 max-w-2xl mx-auto mt-2 px-4">
               Walk out the same faith-filled, strategic process God gave the widow: a path from lack to legacy.
             </p>
           </div>
           
-          {/* Progress Indicator */}
-          <div className="max-w-md mx-auto mt-8">
-            <div className="bg-white rounded-lg p-4 shadow-card">
-              <p className="text-sm text-brand-gray mb-2">Your Journey to Financial Freedom</p>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div 
-                  className="bg-gradient-hero h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min((debts.filter(d => d.balance > 0).length * 25), 100)}%` }}
-                ></div>
-              </div>
-            </div>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center px-4">
+            <Button 
+              onClick={startOnboarding}
+              className="bg-gradient-primary hover:opacity-90 text-white font-semibold touch-target w-full sm:w-auto"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Take the Guided Tour
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={startOnboarding}
+              className="touch-target w-full sm:w-auto"
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Learn the 6-Step Process
+            </Button>
           </div>
         </div>
+
+        {/* Progress Dashboard */}
+        <ProgressDashboard 
+          currentStep={currentStep}
+          completedSteps={completedSteps}
+          debtsEntered={debts.length}
+          calculationsDone={!!calculationResults}
+        />
 
       {/* Biblical Verse */}
       <BiblicalVerse className="animate-fade-in" />
@@ -215,7 +259,7 @@ export const DebtCalculator: React.FC = () => {
           <Button
             onClick={addDebt}
             variant="outline"
-            className="w-full border-dashed border-2 hover:bg-primary/5"
+            className="w-full border-dashed border-2 hover:bg-primary/5 touch-target"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Another Debt
@@ -229,8 +273,8 @@ export const DebtCalculator: React.FC = () => {
           <CardTitle>Extra Monthly Payment</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-3 gap-4 items-end">
-            <div className="md:col-span-2">
+          <div className="grid gap-4">
+            <div>
               <Label htmlFor="extra-payment">Additional amount to apply monthly</Label>
               <Input
                 id="extra-payment"
@@ -238,15 +282,15 @@ export const DebtCalculator: React.FC = () => {
                 value={extraPayment || ''}
                 onChange={(e) => setExtraPayment(parseFloat(e.target.value) || 0)}
                 placeholder="200"
-                className="mt-1"
+                className="mt-1 text-lg"
               />
             </div>
             <Button
               onClick={calculateStrategies}
-              className="bg-gradient-primary hover:opacity-90"
+              className="bg-gradient-primary hover:opacity-90 touch-target w-full md:w-auto"
             >
               <Calculator className="h-4 w-4 mr-2" />
-              Calculate
+              Calculate Payoff Strategies
             </Button>
           </div>
         </CardContent>
@@ -278,7 +322,7 @@ export const DebtCalculator: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button 
                     size="lg" 
-                    className="bg-white text-brand-green hover:bg-white/90 font-semibold px-8 py-3"
+                    className="bg-white text-brand-green hover:bg-white/90 font-semibold px-6 md:px-8 py-3 touch-target"
                     onClick={() => window.open('https://legacymindsetsolutions.com/contact', '_blank')}
                   >
                     Schedule Free Consultation
@@ -286,7 +330,7 @@ export const DebtCalculator: React.FC = () => {
                   <Button 
                     size="lg" 
                     variant="outline"
-                    className="border-white text-white hover:bg-white/10 font-semibold px-8 py-3"
+                    className="border-white text-white hover:bg-white/10 font-semibold px-6 md:px-8 py-3 touch-target"
                     onClick={() => window.open('https://legacymindsetsolutions.com', '_blank')}
                   >
                     Learn More About Us
@@ -300,6 +344,13 @@ export const DebtCalculator: React.FC = () => {
           </Card>
         </div>
       )}
+      
+      {/* Onboarding Wizard */}
+      <OnboardingWizard 
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onComplete={handleOnboardingComplete}
+      />
       </div>
     </div>
   );
