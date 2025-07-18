@@ -8,53 +8,40 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Premium color palette for financial services */
-    --background: 255 255 255;
-    --foreground: 15 23 42;
-    
-    /* Primary - Deep trust blue with Legacy Mindset green accent */
-    --primary: 140 45% 35%;
-    --primary-foreground: 255 255 255;
-    --primary-variant: 140 45% 45%;
-    
-    /* Secondary - Warm gold for prosperity */
-    --secondary: 45 93% 47%;
-    --secondary-foreground: 15 23 42;
-    
-    /* Muted backgrounds with subtle warmth */
-    --muted: 140 10% 96%;
-    --muted-foreground: 64 12% 45%;
-    
-    /* Cards with subtle elevation */
-    --card: 255 255 255;
-    --card-foreground: 15 23 42;
-    
-    /* Borders with elegance */
-    --border: 140 15% 88%;
-    --input: 140 15% 88%;
-    
-    /* Accents for highlights */
-    --accent: 140 15% 96%;
-    --accent-foreground: 15 23 42;
-    
-    /* Success - Growth green */
+    --background: 215 30% 98%;
+    --foreground: 225 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 225 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 20% 15%;
+
+    --primary: 215 70% 35%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 215 25% 95%;
+    --secondary-foreground: 225 20% 25%;
+
+    --muted: 215 20% 94%;
+    --muted-foreground: 215 15% 50%;
+
+    --accent: 45 85% 55%;
+    --accent-foreground: 225 20% 15%;
+
     --success: 140 65% 45%;
-    --success-foreground: 255 255 255;
-    
-    /* Warning - Caution amber */
-    --warning: 43 96% 56%;
-    --warning-foreground: 15 23 42;
-    
-    /* Destructive - Alert red */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 255 255 255;
-    
-    /* Ring for focus states */
-    --ring: 140 45% 35%;
-    
-    /* Radius for modern look */
-    --radius: 0.75rem;
-    
+    --success-foreground: 0 0% 98%;
+
+    --warning: 35 90% 60%;
+    --warning-foreground: 225 20% 15%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 20% 88%;
+    --input: 215 20% 88%;
+    --ring: 215 70% 35%;
+
     /* Legacy Mindset brand colors */
     --brand-green: 140 45% 45%;
     --brand-green-light: 140 45% 55%;
@@ -62,79 +49,83 @@ All colors MUST be HSL.
     --brand-charcoal: 220 15% 25%;
     --brand-gray: 220 10% 50%;
     
+    /* Updated primary to use brand green */
+    --primary: 140 45% 45%;
+    --primary-foreground: 0 0% 98%;
+
     /* Financial app specific colors using brand palette */
     --financial-growth: 140 45% 45%;
     --financial-debt: 0 75% 55%;
     --financial-wisdom: 140 45% 55%;
     --financial-progress: 140 40% 50%;
 
-    /* Premium gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(140 45% 35%), hsl(140 45% 45%));
-    --gradient-success: linear-gradient(135deg, hsl(140 65% 45%), hsl(140 65% 55%));
-    --gradient-warm: linear-gradient(135deg, hsl(45 93% 47%), hsl(45 93% 57%));
-    --gradient-card: linear-gradient(145deg, hsl(255 255 255), hsl(140 10% 98%));
+    /* Brand-aligned gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(140 45% 45%), hsl(140 45% 55%));
+    --gradient-success: linear-gradient(135deg, hsl(140 45% 45%), hsl(140 50% 35%));
+    --gradient-wisdom: linear-gradient(135deg, hsl(140 45% 55%), hsl(140 40% 60%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(140 10% 98%));
     --gradient-hero: linear-gradient(135deg, hsl(140 45% 45%), hsl(140 40% 50%));
-    
-    /* Elegant shadows */
-    --shadow-elegant: 0 10px 25px -5px hsl(140 45% 35% / 0.1), 0 4px 6px -2px hsl(140 45% 35% / 0.05);
-    --shadow-warm: 0 10px 25px -5px hsl(45 93% 47% / 0.15), 0 4px 6px -2px hsl(45 93% 47% / 0.1);
-    --shadow-soft: 0 2px 20px -4px hsl(140 45% 35% / 0.1);
-    --shadow-card: 0 4px 25px -6px hsl(140 45% 35% / 0.15);
-    --shadow-glow: 0 0 30px hsl(45 93% 47% / 0.2);
 
-    /* Sidebar colors */
-    --sidebar-background: 255 255 255;
-    --sidebar-foreground: 15 23 42;
-    --sidebar-primary: 140 45% 35%;
-    --sidebar-primary-foreground: 255 255 255;
-    --sidebar-accent: 140 15% 96%;
-    --sidebar-accent-foreground: 15 23 42;
-    --sidebar-border: 140 15% 88%;
-    --sidebar-ring: 140 45% 35%;
+    /* Shadows */
+    --shadow-soft: 0 2px 20px -4px hsl(215 70% 35% / 0.1);
+    --shadow-card: 0 4px 25px -6px hsl(215 70% 35% / 0.15);
+    --shadow-glow: 0 0 30px hsl(45 85% 55% / 0.2);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 15 23 42;
-    --foreground: 248 250 252;
-    
-    --primary: 140 45% 55%;
-    --primary-foreground: 15 23 42;
-    --primary-variant: 140 45% 65%;
-    
-    --secondary: 45 93% 57%;
-    --secondary-foreground: 15 23 42;
-    
-    --muted: 30 41% 10%;
-    --muted-foreground: 156 14% 71%;
-    
-    --card: 30 41% 6%;
-    --card-foreground: 248 250 252;
-    
-    --border: 30 41% 15%;
-    --input: 30 41% 15%;
-    
-    --accent: 30 41% 10%;
-    --accent-foreground: 248 250 252;
-    
-    --success: 140 65% 55%;
-    --success-foreground: 15 23 42;
-    
-    --warning: 43 96% 66%;
-    --warning-foreground: 15 23 42;
-    
-    --destructive: 0 84% 70%;
-    --destructive-foreground: 248 250 252;
-    
-    --ring: 140 45% 55%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --sidebar-background: 30 41% 6%;
-    --sidebar-foreground: 248 250 252;
-    --sidebar-primary: 140 45% 55%;
-    --sidebar-primary-foreground: 15 23 42;
-    --sidebar-accent: 30 41% 10%;
-    --sidebar-accent-foreground: 248 250 252;
-    --sidebar-border: 30 41% 15%;
-    --sidebar-ring: 140 45% 55%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -145,30 +136,6 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
-  }
-
-  /* Premium component styles */
-  .premium-card {
-    background: linear-gradient(135deg, hsl(var(--card)), hsl(var(--muted)));
-    box-shadow: var(--shadow-elegant);
-    border: 1px solid hsl(var(--border));
-  }
-
-  .success-gradient {
-    background: var(--gradient-success);
-  }
-
-  .primary-gradient {
-    background: var(--gradient-primary);
-  }
-
-  .warm-gradient {
-    background: var(--gradient-warm);
   }
 
   /* Mobile-first touch targets */

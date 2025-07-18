@@ -407,11 +407,9 @@ export function CoachingIntegration() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold font-playfair text-foreground mb-3 bg-gradient-to-r from-primary to-primary-variant bg-clip-text text-transparent">
-          Coaching Integration
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Coaching Integration</h1>
+        <p className="text-muted-foreground">
           Connect with Legacy Mindset Solutions coaches and access biblical financial resources
         </p>
       </div>
@@ -429,13 +427,13 @@ export function CoachingIntegration() {
         {/* Consultation Booking */}
         <TabsContent value="booking" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="premium-card">
-              <CardHeader className="primary-gradient text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-2 font-playfair text-xl">
-                  <Calendar className="h-6 w-6" />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
                   Book Your Consultation
                 </CardTitle>
-                <CardDescription className="text-primary-foreground/80">
+                <CardDescription>
                   Schedule a session with our biblical financial coaches
                 </CardDescription>
               </CardHeader>
@@ -509,9 +507,9 @@ export function CoachingIntegration() {
               </CardContent>
             </Card>
 
-            <Card className="premium-card">
+            <Card>
               <CardHeader>
-                <CardTitle className="font-playfair text-xl">Your Booking Requests</CardTitle>
+                <CardTitle>Your Booking Requests</CardTitle>
                 <CardDescription>
                   Track your consultation requests and confirmations
                 </CardDescription>
@@ -555,13 +553,13 @@ export function CoachingIntegration() {
 
         {/* Resource Library */}
         <TabsContent value="resources" className="space-y-6">
-          <Card className="premium-card">
-            <CardHeader className="warm-gradient text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-2 font-playfair text-xl">
-                <BookOpen className="h-6 w-6" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
                 Biblical Financial Resources
               </CardTitle>
-              <CardDescription className="text-secondary-foreground/80">
+              <CardDescription>
                 Access our library of faith-based financial education materials
               </CardDescription>
             </CardHeader>
@@ -712,12 +710,12 @@ export function CoachingIntegration() {
               <div className="relative">
                 <div className="overflow-hidden rounded-lg">
                   <div 
-                    className="flex transition-transform duration-700 ease-in-out"
+                    className="flex transition-transform duration-500 ease-in-out"
                     style={{ transform: `translateX(-${currentStoryIndex * 100}%)` }}
                   >
                     {successStories.map((story) => (
-                      <div key={story.id} className="w-full flex-shrink-0 p-8 bg-gradient-to-br from-primary/5 via-secondary/5 to-success/5 rounded-lg border border-border/50">
-                        <div className="flex flex-col lg:flex-row gap-8">
+                      <div key={story.id} className="w-full flex-shrink-0 p-6 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg">
+                        <div className="flex flex-col lg:flex-row gap-6">
                           <div className="flex-shrink-0">
                             <div className="w-32 h-32 rounded-full overflow-hidden bg-muted">
                               <img 
@@ -728,10 +726,10 @@ export function CoachingIntegration() {
                             </div>
                           </div>
                           
-                          <div className="flex-1 space-y-6">
+                          <div className="flex-1 space-y-4">
                             <div>
-                              <h3 className="text-2xl font-bold font-playfair text-foreground">{story.name}</h3>
-                              <p className="text-muted-foreground font-medium">{story.location}</p>
+                              <h3 className="text-xl font-semibold">{story.name}</h3>
+                              <p className="text-muted-foreground">{story.location}</p>
                             </div>
                             
                             <div className="relative">
