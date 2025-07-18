@@ -20,7 +20,8 @@ import {
   UserPlus,
   CheckCircle2,
   Clock,
-  Target
+  Target,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -132,6 +133,16 @@ export function Accountability() {
     });
   };
 
+  const removePartner = (partnerId: string) => {
+    const partnerToRemove = partners.find(p => p.id === partnerId);
+    setPartners(prev => prev.filter(p => p.id !== partnerId));
+    
+    toast({
+      title: "Partner Removed",
+      description: `${partnerToRemove?.name} has been removed from your accountability partners.`
+    });
+  };
+
   const shareUpdate = () => {
     if (!newUpdate.message) {
       toast({
@@ -210,6 +221,14 @@ export function Accountability() {
                       <span className="text-xs text-green-600">Active</span>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removePartner(partner.id)}
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               ))}
               
