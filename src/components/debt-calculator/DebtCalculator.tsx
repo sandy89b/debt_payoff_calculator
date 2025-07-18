@@ -91,16 +91,32 @@ export const DebtCalculator: React.FC = () => {
   }, [debts, extraPayment]);
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Debt Payoff Calculator
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Find your path to financial freedom through biblical wisdom and strategic debt elimination
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-brand-green/5">
+      <div className="max-w-7xl mx-auto p-6 space-y-8">
+        {/* Hero Section */}
+        <div className="text-center space-y-6 py-12">
+          <div className="animate-fade-in">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-hero bg-clip-text text-transparent mb-4">
+              Debt Payoff Calculator
+            </h1>
+            <p className="text-xl text-brand-gray max-w-3xl mx-auto leading-relaxed">
+              Discover your path to financial freedom through biblical wisdom and strategic debt elimination
+            </p>
+          </div>
+          
+          {/* Progress Indicator */}
+          <div className="max-w-md mx-auto mt-8">
+            <div className="bg-white rounded-lg p-4 shadow-card">
+              <p className="text-sm text-brand-gray mb-2">Your Journey to Financial Freedom</p>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-gradient-hero h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min((debts.filter(d => d.balance > 0).length * 25), 100)}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
 
       {/* Biblical Verse */}
       <BiblicalVerse className="animate-fade-in" />
@@ -175,26 +191,44 @@ export const DebtCalculator: React.FC = () => {
             avalanche={calculationResults.avalanche}
           />
           
-          {/* Call to Action */}
-          <Card className="bg-gradient-primary shadow-glow text-center">
-            <CardContent className="p-8">
-              <h3 className="text-2xl font-bold text-primary-foreground mb-4">
-                Ready to Start Your Journey to Financial Freedom?
-              </h3>
-              <p className="text-primary-foreground/90 mb-6">
-                Get personalized coaching and support from Legacy Mindset Solutions
-              </p>
-              <Button 
-                size="lg" 
-                variant="secondary"
-                className="bg-financial-wisdom hover:bg-financial-wisdom/90 text-foreground"
-              >
-                Schedule Free Consultation
-              </Button>
+          {/* Enhanced Call to Action */}
+          <Card className="bg-gradient-hero shadow-glow text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-brand-green/10 backdrop-blur-sm"></div>
+            <CardContent className="relative p-8 md:p-12">
+              <div className="max-w-2xl mx-auto">
+                <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  Ready to Transform Your Financial Future?
+                </h3>
+                <p className="text-white/90 text-lg mb-8 leading-relaxed">
+                  Get personalized coaching and support from our certified financial educators at Legacy Mindset Solutions. 
+                  Let's build a legacy that reflects biblical wisdom and transforms lives.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-brand-green hover:bg-white/90 font-semibold px-8 py-3"
+                    onClick={() => window.open('https://legacymindsetsolutions.com/contact', '_blank')}
+                  >
+                    Schedule Free Consultation
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-white text-white hover:bg-white/10 font-semibold px-8 py-3"
+                    onClick={() => window.open('https://legacymindsetsolutions.com', '_blank')}
+                  >
+                    Learn More About Us
+                  </Button>
+                </div>
+                <p className="text-white/80 text-sm mt-6">
+                  Over 20 years of experience • Biblical principles • Proven results
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
       )}
+      </div>
     </div>
   );
 };

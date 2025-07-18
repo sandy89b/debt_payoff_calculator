@@ -42,17 +42,29 @@ All colors MUST be HSL.
     --input: 215 20% 88%;
     --ring: 215 70% 35%;
 
-    /* Financial app specific colors */
-    --financial-growth: 140 65% 45%;
-    --financial-debt: 0 75% 55%;
-    --financial-wisdom: 45 85% 55%;
-    --financial-progress: 200 65% 55%;
+    /* Legacy Mindset brand colors */
+    --brand-green: 140 45% 45%;
+    --brand-green-light: 140 45% 55%;
+    --brand-green-dark: 140 50% 35%;
+    --brand-charcoal: 220 15% 25%;
+    --brand-gray: 220 10% 50%;
+    
+    /* Updated primary to use brand green */
+    --primary: 140 45% 45%;
+    --primary-foreground: 0 0% 98%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(215 70% 35%), hsl(200 65% 45%));
-    --gradient-success: linear-gradient(135deg, hsl(140 65% 45%), hsl(120 55% 50%));
-    --gradient-wisdom: linear-gradient(135deg, hsl(45 85% 55%), hsl(40 80% 60%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(215 25% 98%));
+    /* Financial app specific colors using brand palette */
+    --financial-growth: 140 45% 45%;
+    --financial-debt: 0 75% 55%;
+    --financial-wisdom: 140 45% 55%;
+    --financial-progress: 140 40% 50%;
+
+    /* Brand-aligned gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(140 45% 45%), hsl(140 45% 55%));
+    --gradient-success: linear-gradient(135deg, hsl(140 45% 45%), hsl(140 50% 35%));
+    --gradient-wisdom: linear-gradient(135deg, hsl(140 45% 55%), hsl(140 40% 60%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(140 10% 98%));
+    --gradient-hero: linear-gradient(135deg, hsl(140 45% 45%), hsl(140 40% 50%));
 
     /* Shadows */
     --shadow-soft: 0 2px 20px -4px hsl(215 70% 35% / 0.1);

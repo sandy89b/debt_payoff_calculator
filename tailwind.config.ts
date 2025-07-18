@@ -28,6 +28,12 @@ export default {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
+				// Legacy Mindset brand colors
+				'brand-green': 'hsl(var(--brand-green))',
+				'brand-green-light': 'hsl(var(--brand-green-light))',
+				'brand-green-dark': 'hsl(var(--brand-green-dark))',
+				'brand-charcoal': 'hsl(var(--brand-charcoal))',
+				'brand-gray': 'hsl(var(--brand-gray))',
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
@@ -139,7 +145,8 @@ export default {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-success': 'var(--gradient-success)',
 				'gradient-wisdom': 'var(--gradient-wisdom)',
-				'gradient-card': 'var(--gradient-card)'
+				'gradient-card': 'var(--gradient-card)',
+				'gradient-hero': 'var(--gradient-hero)'
 			},
 			boxShadow: {
 				'soft': 'var(--shadow-soft)',
