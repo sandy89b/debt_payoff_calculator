@@ -4,24 +4,24 @@ import { Book } from 'lucide-react';
 
 const verses = [
   {
-    text: "The rich rule over the poor, and the borrower is slave to the lender.",
-    reference: "Proverbs 22:7"
+    text: "Tell me, what do you have in your house?",
+    reference: "2 Kings 4:2"
   },
   {
-    text: "Let no debt remain outstanding, except the continuing debt to love one another.",
-    reference: "Romans 13:8"
+    text: "Go around and ask all your neighbors for empty jars—don't ask for just a few.",
+    reference: "2 Kings 4:3"
   },
   {
-    text: "Suppose one of you wants to build a tower. Won't you first sit down and estimate the cost?",
-    reference: "Luke 14:28"
+    text: "Then go inside and shut the door... Pour oil into all the jars.",
+    reference: "2 Kings 4:4"
   },
   {
-    text: "The plans of the diligent lead to profit as surely as haste leads to poverty.",
-    reference: "Proverbs 21:5"
+    text: "Go, sell the oil and pay your debts. You and your sons can live on what is left.",
+    reference: "2 Kings 4:7"
   },
   {
-    text: "For where your treasure is, there your heart will be also.",
-    reference: "Matthew 6:21"
+    text: "When all the jars were full, she said... 'Bring me another one.' But there was not a jar left. Then the oil stopped flowing.",
+    reference: "2 Kings 4:6"
   }
 ];
 

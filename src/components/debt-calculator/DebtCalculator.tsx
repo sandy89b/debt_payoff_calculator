@@ -97,10 +97,13 @@ export const DebtCalculator: React.FC = () => {
         <div className="text-center space-y-6 py-12">
           <div className="animate-fade-in">
             <h1 className="text-5xl md:text-6xl font-bold bg-gradient-hero bg-clip-text text-transparent mb-4">
-              Debt Payoff Calculator
+              The Pour & Payoff Planner™
             </h1>
             <p className="text-xl text-brand-gray max-w-3xl mx-auto leading-relaxed">
-              Discover your path to financial freedom through biblical wisdom and strategic debt elimination
+              "Use what's in your house to cancel what you owe and create what you need."
+            </p>
+            <p className="text-lg text-brand-gray/80 max-w-2xl mx-auto mt-2">
+              Walk out the same faith-filled, strategic process God gave the widow: a path from lack to legacy.
             </p>
           </div>
           
@@ -120,6 +123,75 @@ export const DebtCalculator: React.FC = () => {
 
       {/* Biblical Verse */}
       <BiblicalVerse className="animate-fade-in" />
+
+      {/* Widow's Wealth Cycle Framework */}
+      <Card className="bg-gradient-card shadow-card">
+        <CardHeader>
+          <CardTitle className="text-center">
+            <span className="text-2xl md:text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+              The Widow's Wealth Cycle™
+            </span>
+            <p className="text-lg text-brand-gray mt-2">A 6-Step Kingdom Framework for Debt Elimination and Overflow</p>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">1</div>
+                <h3 className="font-semibold text-brand-charcoal">INVENTORY</h3>
+              </div>
+              <p className="text-sm text-brand-gray"><strong>What's In Your House?</strong></p>
+              <p className="text-sm text-brand-gray">Identify your current income, assets, skills, and untapped potential.</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">2</div>
+                <h3 className="font-semibold text-brand-charcoal">INSTRUCTION</h3>
+              </div>
+              <p className="text-sm text-brand-gray"><strong>Borrow With Purpose</strong></p>
+              <p className="text-sm text-brand-gray">Strategic, temporary borrowing—only for production, not consumption.</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">3</div>
+                <h3 className="font-semibold text-brand-charcoal">IMPLEMENTATION</h3>
+              </div>
+              <p className="text-sm text-brand-gray"><strong>Shut the Door and Pour</strong></p>
+              <p className="text-sm text-brand-gray">Execution season—use what's in your hand and focus without distractions.</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">4</div>
+                <h3 className="font-semibold text-brand-charcoal">INCREASE</h3>
+              </div>
+              <p className="text-sm text-brand-gray"><strong>Let It Flow Until It Stops</strong></p>
+              <p className="text-sm text-brand-gray">Track your output and multiply what's working.</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">5</div>
+                <h3 className="font-semibold text-brand-charcoal">INCOME</h3>
+              </div>
+              <p className="text-sm text-brand-gray"><strong>Sell the Oil</strong></p>
+              <p className="text-sm text-brand-gray">Time to monetize—use your revenue to create margin.</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">6</div>
+                <h3 className="font-semibold text-brand-charcoal">IMPACT</h3>
+              </div>
+              <p className="text-sm text-brand-gray"><strong>Pay Off & Live on the Rest</strong></p>
+              <p className="text-sm text-brand-gray">Pay off all debts and establish your overflow strategy.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Debt Entries */}
       <Card className="bg-gradient-card shadow-card">
