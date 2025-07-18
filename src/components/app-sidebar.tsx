@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Target, Bell, Download, Calculator, Home, BookOpen, Heart, Trophy, Users, TrendingUp, Shield, DollarSign, Crown } from "lucide-react";
+import { Calendar, Target, Bell, Download, Calculator, Home, BookOpen, Heart, Trophy, Users, TrendingUp, Shield, DollarSign, Crown, GraduationCap } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import {
@@ -36,6 +36,7 @@ const motivationItems = [
   { title: "Achievements", url: "/achievements", icon: Trophy },
   { title: "Accountability", url: "/accountability", icon: Users },
   { title: "Prayer Corner", url: "/prayers", icon: Heart },
+  { title: "Coaching", url: "/coaching", icon: GraduationCap },
 ];
 
 const advancedToolsItems = [

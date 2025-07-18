@@ -21,6 +21,7 @@ import { IncomeOptimization } from "@/components/income-optimization";
 import { EmergencyFundCalculator } from "@/components/emergency-fund-calculator";
 import { GivingStewardshipTracker } from "@/components/giving-stewardship-tracker";
 import { LegacyPlanning } from "@/components/legacy-planning";
+import { CoachingIntegration } from "@/components/coaching-integration";
 import { useDebtsStorage } from "@/hooks/useDebtsStorage";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => {
                       <Route path="/emergency-fund-calculator" element={<EmergencyFundCalculator />} />
                       <Route path="/giving-stewardship-tracker" element={<GivingStewardshipTracker />} />
                       <Route path="/legacy-planning" element={<LegacyPlanning />} />
+                      <Route path="/coaching" element={<CoachingIntegration />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>
