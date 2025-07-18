@@ -14,6 +14,9 @@ import { Reminders } from "@/components/calendar/reminders";
 import { Export } from "@/components/calendar/export";
 import { InteractiveFramework } from "@/components/interactive-framework";
 import { DailyDevotionals } from "@/components/daily-devotionals";
+import { Achievements } from "@/components/achievements";
+import { Accountability } from "@/components/accountability";
+import { PrayerIntegration } from "@/components/prayer-integration";
 import { useDebtsStorage } from "@/hooks/useDebtsStorage";
 
 const queryClient = new QueryClient();
@@ -50,6 +53,9 @@ const App = () => {
                       <Route path="/calendar/export" element={<Export debts={debts} />} />
                       <Route path="/framework" element={<InteractiveFramework />} />
                       <Route path="/devotionals" element={<DailyDevotionals />} />
+                      <Route path="/achievements" element={<Achievements />} />
+                      <Route path="/accountability" element={<Accountability />} />
+                      <Route path="/prayers" element={<PrayerIntegration />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>
