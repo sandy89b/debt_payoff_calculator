@@ -12,6 +12,8 @@ import { DebtProgress } from './DebtProgress';
 import { calculatePayoffStrategies } from './PayoffCalculator';
 import { OnboardingWizard } from '../onboarding-wizard';
 import { ProgressDashboard } from '../progress-dashboard';
+import { WhatIfScenarios } from '../what-if-scenarios';
+import { PDFExport } from '../pdf-export';
 import { useDebtsStorage } from '@/hooks/useDebtsStorage';
 
 export const DebtCalculator: React.FC = () => {
@@ -389,6 +391,23 @@ export const DebtCalculator: React.FC = () => {
           </p>
         </CardContent>
       </Card>
+
+      {/* What-If Scenarios */}
+      <WhatIfScenarios 
+        debts={debts}
+        baseExtraPayment={extraPayment}
+        onScenarioSelect={(newExtraPayment) => {
+          setExtraPayment(newExtraPayment);
+          saveDebtData(debts, newExtraPayment);
+        }}
+      />
+
+      {/* PDF Export */}
+      <PDFExport 
+        debts={debts}
+        extraPayment={extraPayment}
+        calculationResults={calculationResults}
+      />
 
       {/* Debt Progress Overview */}
       <DebtProgress debts={debts} />
