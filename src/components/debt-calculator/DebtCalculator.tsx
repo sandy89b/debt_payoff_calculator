@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calculator, DollarSign, BookOpen, HelpCircle } from 'lucide-react';
+import { Plus, Calculator, DollarSign, BookOpen, HelpCircle, Download, Upload, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,19 +12,28 @@ import { DebtProgress } from './DebtProgress';
 import { calculatePayoffStrategies } from './PayoffCalculator';
 import { OnboardingWizard } from '../onboarding-wizard';
 import { ProgressDashboard } from '../progress-dashboard';
+import { useDebtsStorage } from '@/hooks/useDebtsStorage';
 
 export const DebtCalculator: React.FC = () => {
   const { toast } = useToast();
-  const [debts, setDebts] = useState<Debt[]>([
-    {
-      id: '1',
-      name: 'Credit Card 1',
-      balance: 5000,
-      minPayment: 150,
-      interestRate: 18.99
-    }
-  ]);
-  const [extraPayment, setExtraPayment] = useState<number>(0);
+  
+  // Use storage hook for persistent data
+  const {
+    debts: storedDebts,
+    extraPayment: storedExtraPayment,
+    currentStep: storedCurrentStep,
+    completedSteps: storedCompletedSteps,
+    hasSeenOnboarding: storedHasSeenOnboarding,
+    saveDebtData,
+    saveProgressData,
+    clearAllData,
+    exportData,
+    importData,
+  } = useDebtsStorage();
+
+  // Local state (synced with storage)
+  const [debts, setDebts] = useState<Debt[]>(storedDebts);
+  const [extraPayment, setExtraPayment] = useState<number>(storedExtraPayment);
   const [calculationResults, setCalculationResults] = useState<{
     snowball: any;
     avalanche: any;
@@ -32,9 +41,9 @@ export const DebtCalculator: React.FC = () => {
   
   // Onboarding and progress state
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+  const [currentStep, setCurrentStep] = useState(storedCurrentStep);
+  const [completedSteps, setCompletedSteps] = useState<number[]>(storedCompletedSteps);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(storedHasSeenOnboarding);
 
   const addDebt = () => {
     const newDebt: Debt = {
@@ -44,16 +53,22 @@ export const DebtCalculator: React.FC = () => {
       minPayment: 0,
       interestRate: 0
     };
-    setDebts([...debts, newDebt]);
+    const newDebts = [...debts, newDebt];
+    setDebts(newDebts);
+    saveDebtData(newDebts, extraPayment);
   };
 
   const updateDebt = (updatedDebt: Debt) => {
-    setDebts(debts.map(debt => debt.id === updatedDebt.id ? updatedDebt : debt));
+    const newDebts = debts.map(debt => debt.id === updatedDebt.id ? updatedDebt : debt);
+    setDebts(newDebts);
+    saveDebtData(newDebts, extraPayment);
   };
 
   const removeDebt = (id: string) => {
     if (debts.length > 1) {
-      setDebts(debts.filter(debt => debt.id !== id));
+      const newDebts = debts.filter(debt => debt.id !== id);
+      setDebts(newDebts);
+      saveDebtData(newDebts, extraPayment);
     } else {
       toast({
         title: "Cannot remove last debt",
@@ -98,10 +113,23 @@ export const DebtCalculator: React.FC = () => {
     }
   }, [debts, extraPayment]);
 
+  // Sync with storage when extra payment changes
+  useEffect(() => {
+    saveDebtData(debts, extraPayment);
+  }, [extraPayment]);
+
+  // Sync stored data when it changes
+  useEffect(() => {
+    setDebts(storedDebts);
+    setExtraPayment(storedExtraPayment);
+    setCurrentStep(storedCurrentStep);
+    setCompletedSteps(storedCompletedSteps);
+    setHasSeenOnboarding(storedHasSeenOnboarding);
+  }, [storedDebts, storedExtraPayment, storedCurrentStep, storedCompletedSteps, storedHasSeenOnboarding]);
+
   // Check if user should see onboarding
   useEffect(() => {
-    const hasVisited = localStorage.getItem('pourPayoffPlannerVisited');
-    if (!hasVisited && !hasSeenOnboarding) {
+    if (!hasSeenOnboarding) {
       setShowOnboarding(true);
     }
   }, [hasSeenOnboarding]);
@@ -109,7 +137,7 @@ export const DebtCalculator: React.FC = () => {
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
     setHasSeenOnboarding(true);
-    localStorage.setItem('pourPayoffPlannerVisited', 'true');
+    saveProgressData(currentStep, completedSteps, true);
     toast({
       title: "Welcome to your journey!",
       description: "Let's start by adding your debts and creating your payoff plan.",
@@ -118,6 +146,22 @@ export const DebtCalculator: React.FC = () => {
 
   const startOnboarding = () => {
     setShowOnboarding(true);
+  };
+
+  const handleExtraPaymentChange = (value: number) => {
+    setExtraPayment(value);
+  };
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        importData(content);
+      };
+      reader.readAsText(file);
+    }
   };
 
   return (
@@ -280,7 +324,7 @@ export const DebtCalculator: React.FC = () => {
                 id="extra-payment"
                 type="number"
                 value={extraPayment || ''}
-                onChange={(e) => setExtraPayment(parseFloat(e.target.value) || 0)}
+                onChange={(e) => handleExtraPaymentChange(parseFloat(e.target.value) || 0)}
                 placeholder="200"
                 className="mt-1 text-lg"
               />
@@ -293,6 +337,56 @@ export const DebtCalculator: React.FC = () => {
               Calculate Payoff Strategies
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Data Management Section */}
+      <Card className="bg-gradient-card shadow-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Download className="h-5 w-5 text-primary" />
+            Your Data
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={exportData}
+              variant="outline"
+              className="flex items-center gap-2 touch-target"
+            >
+              <Download className="h-4 w-4" />
+              Export Backup
+            </Button>
+            
+            <div className="relative">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileImport}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 touch-target w-full"
+              >
+                <Upload className="h-4 w-4" />
+                Import Backup
+              </Button>
+            </div>
+            
+            <Button
+              onClick={clearAllData}
+              variant="destructive"
+              className="flex items-center gap-2 touch-target"
+            >
+              <Trash2 className="h-4 w-4" />
+              Clear All Data
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Your progress is automatically saved. Export for backup or import to restore previous data.
+          </p>
         </CardContent>
       </Card>
 
