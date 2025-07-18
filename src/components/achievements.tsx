@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   Lock,
   Sparkles,
-  Shield
+  ShieldCheck
 } from "lucide-react";
 import { useDebtsStorage } from "@/hooks/useDebtsStorage";
 
@@ -69,7 +69,7 @@ const achievementDefinitions = [
     id: "emergency-saver",
     title: "Emergency Ready",
     description: "Build a $1,000 emergency fund",
-    icon: Shield,
+    icon: ShieldCheck,
     category: "savings" as const,
     requirement: 1000,
     rarity: "rare" as const,
