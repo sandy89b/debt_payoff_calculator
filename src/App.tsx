@@ -17,6 +17,10 @@ import { DailyDevotionals } from "@/components/daily-devotionals";
 import { Achievements } from "@/components/achievements";
 import { Accountability } from "@/components/accountability";
 import { PrayerIntegration } from "@/components/prayer-integration";
+import { IncomeOptimization } from "@/components/income-optimization";
+import { EmergencyFundCalculator } from "@/components/emergency-fund-calculator";
+import { GivingStewardshipTracker } from "@/components/giving-stewardship-tracker";
+import { LegacyPlanning } from "@/components/legacy-planning";
 import { useDebtsStorage } from "@/hooks/useDebtsStorage";
 
 const queryClient = new QueryClient();
@@ -56,6 +60,10 @@ const App = () => {
                       <Route path="/achievements" element={<Achievements />} />
                       <Route path="/accountability" element={<Accountability />} />
                       <Route path="/prayers" element={<PrayerIntegration />} />
+                      <Route path="/income-optimization" element={<IncomeOptimization />} />
+                      <Route path="/emergency-fund-calculator" element={<EmergencyFundCalculator />} />
+                      <Route path="/giving-stewardship-tracker" element={<GivingStewardshipTracker />} />
+                      <Route path="/legacy-planning" element={<LegacyPlanning />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>

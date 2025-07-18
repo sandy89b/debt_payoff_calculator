@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Target, Bell, Download, Calculator, Home, BookOpen, Heart, Trophy, Users } from "lucide-react";
+import { Calendar, Target, Bell, Download, Calculator, Home, BookOpen, Heart, Trophy, Users, TrendingUp, Shield, DollarSign, Crown } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import {
@@ -36,6 +36,13 @@ const motivationItems = [
   { title: "Achievements", url: "/achievements", icon: Trophy },
   { title: "Accountability", url: "/accountability", icon: Users },
   { title: "Prayer Corner", url: "/prayers", icon: Heart },
+];
+
+const advancedToolsItems = [
+  { title: "Income Optimization", url: "/income-optimization", icon: TrendingUp },
+  { title: "Emergency Fund", url: "/emergency-fund-calculator", icon: Shield },
+  { title: "Giving Tracker", url: "/giving-stewardship-tracker", icon: DollarSign },
+  { title: "Legacy Planning", url: "/legacy-planning", icon: Crown },
 ];
 
 export function AppSidebar() {
@@ -112,6 +119,24 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {motivationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end className={getNavCls}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Advanced Tools</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {advancedToolsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
