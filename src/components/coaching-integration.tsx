@@ -23,7 +23,11 @@ import {
   Bell,
   Target,
   Heart,
-  Lightbulb
+  Lightbulb,
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  Quote
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -67,6 +71,30 @@ interface Checkpoint {
   priority: "low" | "medium" | "high";
   completed: boolean;
   suggestedAction: string;
+}
+
+interface CoachingVideo {
+  id: string;
+  title: string;
+  step: string;
+  description: string;
+  duration: string;
+  videoUrl: string;
+  thumbnail: string;
+  watched: boolean;
+}
+
+interface SuccessStory {
+  id: string;
+  name: string;
+  location: string;
+  situation: string;
+  transformation: string;
+  timeframe: string;
+  debtReduction: string;
+  emergencyFund: string;
+  image: string;
+  quote: string;
 }
 
 export function CoachingIntegration() {
@@ -181,6 +209,112 @@ export function CoachingIntegration() {
     }
   ]);
 
+  const [coachingVideos, setCoachingVideos] = useLocalStorage<CoachingVideo[]>("coaching-videos", [
+    {
+      id: "1",
+      title: "Biblical Foundation for Financial Recovery",
+      step: "Step 1: Foundation",
+      description: "Understanding God's heart for your financial healing and establishing biblical principles",
+      duration: "12:30",
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      thumbnail: "/api/placeholder/400/225",
+      watched: false
+    },
+    {
+      id: "2",
+      title: "Emergency Fund Essentials for Widows",
+      step: "Step 2: Protection",
+      description: "Building your safety net with realistic goals and biblical wisdom",
+      duration: "15:45",
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      thumbnail: "/api/placeholder/400/225",
+      watched: false
+    },
+    {
+      id: "3",
+      title: "Debt Freedom Strategy",
+      step: "Step 3: Freedom",
+      description: "Creating your debt elimination plan with prayer and practical steps",
+      duration: "18:20",
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      thumbnail: "/api/placeholder/400/225",
+      watched: false
+    },
+    {
+      id: "4",
+      title: "Building Wealth God's Way",
+      step: "Step 4: Growth",
+      description: "Growing your resources through biblical stewardship principles",
+      duration: "22:10",
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      thumbnail: "/api/placeholder/400/225",
+      watched: false
+    },
+    {
+      id: "5",
+      title: "Legacy and Giving",
+      step: "Step 5: Legacy",
+      description: "Creating lasting impact through generous giving and wise planning",
+      duration: "16:40",
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      thumbnail: "/api/placeholder/400/225",
+      watched: false
+    }
+  ]);
+
+  const [successStories] = useState<SuccessStory[]>([
+    {
+      id: "1",
+      name: "Maria Rodriguez",
+      location: "Phoenix, AZ",
+      situation: "Lost husband suddenly, $45k in debt, no savings",
+      transformation: "Paid off all debt and built 6-month emergency fund",
+      timeframe: "18 months",
+      debtReduction: "$45,000",
+      emergencyFund: "$12,000",
+      image: "/api/placeholder/150/150",
+      quote: "I thought my financial future was hopeless after losing Miguel. Legacy Mindset Solutions showed me that God had a plan for my restoration. Today I'm debt-free and helping other widows find hope."
+    },
+    {
+      id: "2",
+      name: "Jennifer Williams",
+      location: "Nashville, TN",
+      situation: "Overwhelmed by finances, $23k credit card debt",
+      transformation: "Eliminated debt and started investing for the future",
+      timeframe: "14 months",
+      debtReduction: "$23,000",
+      emergencyFund: "$8,500",
+      image: "/api/placeholder/150/150",
+      quote: "The biblical approach to money management changed everything. I went from financial anxiety to peace, knowing I'm stewarding God's resources well."
+    },
+    {
+      id: "3",
+      name: "Patricia Johnson",
+      location: "Atlanta, GA",
+      situation: "Facing foreclosure, $67k total debt including mortgage arrears",
+      transformation: "Saved her home and became completely debt-free",
+      timeframe: "24 months",
+      debtReduction: "$67,000",
+      emergencyFund: "$15,000",
+      image: "/api/placeholder/150/150",
+      quote: "They helped me create a plan when I couldn't see a way forward. God used Legacy Mindset Solutions to literally save my home and my financial future."
+    },
+    {
+      id: "4",
+      name: "Susan Chen",
+      location: "Seattle, WA",
+      situation: "Retired with fixed income, struggling to make ends meet",
+      transformation: "Optimized her budget and built substantial savings",
+      timeframe: "8 months",
+      debtReduction: "$12,000",
+      emergencyFund: "$10,000",
+      image: "/api/placeholder/150/150",
+      quote: "I learned that even on a fixed income, biblical stewardship principles can create abundance. I'm now able to give generously while living comfortably."
+    }
+  ]);
+
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+
   const [newBooking, setNewBooking] = useState({
     date: "",
     time: "",
@@ -224,6 +358,22 @@ export function CoachingIntegration() {
     });
   };
 
+  const handleVideoWatch = (videoId: string) => {
+    setCoachingVideos(prev => 
+      prev.map(video => 
+        video.id === videoId ? { ...video, watched: true } : video
+      )
+    );
+  };
+
+  const nextStory = () => {
+    setCurrentStoryIndex((prev) => (prev + 1) % successStories.length);
+  };
+
+  const prevStory = () => {
+    setCurrentStoryIndex((prev) => (prev - 1 + successStories.length) % successStories.length);
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "phone": return <Phone className="h-4 w-4" />;
@@ -265,11 +415,13 @@ export function CoachingIntegration() {
       </div>
 
       <Tabs defaultValue="booking" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="booking">Consultation Booking</TabsTrigger>
-          <TabsTrigger value="resources">Resource Library</TabsTrigger>
-          <TabsTrigger value="community">Community Forum</TabsTrigger>
-          <TabsTrigger value="checkpoints">Coaching Checkpoints</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="booking">Booking</TabsTrigger>
+          <TabsTrigger value="resources">Resources</TabsTrigger>
+          <TabsTrigger value="videos">Videos</TabsTrigger>
+          <TabsTrigger value="stories">Success Stories</TabsTrigger>
+          <TabsTrigger value="community">Community</TabsTrigger>
+          <TabsTrigger value="checkpoints">Checkpoints</TabsTrigger>
         </TabsList>
 
         {/* Consultation Booking */}
@@ -450,6 +602,221 @@ export function CoachingIntegration() {
                     </Button>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Video Integration */}
+        <TabsContent value="videos" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Video className="h-5 w-5" />
+                Widow's Wealth Cycle Video Series
+              </CardTitle>
+              <CardDescription>
+                Step-by-step coaching videos guiding you through biblical financial recovery
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6 lg:grid-cols-2">
+                {coachingVideos.map((video, index) => (
+                  <div key={video.id} className="rounded-lg border bg-card overflow-hidden">
+                    <div className="relative aspect-video bg-muted">
+                      <iframe
+                        src={video.videoUrl}
+                        title={video.title}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                      {!video.watched && (
+                        <div className="absolute top-2 right-2">
+                          <Badge variant="secondary" className="text-xs">
+                            New
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge variant="outline" className="text-xs mb-2">
+                          {video.step}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {video.duration}
+                        </div>
+                      </div>
+                      <h3 className="font-semibold mb-2">{video.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {video.description}
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleVideoWatch(video.id)}
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        {video.watched ? "Watch Again" : "Start Watching"}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 p-4 rounded-lg bg-muted/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="font-medium">Progress Tracking</span>
+                </div>
+                <div className="text-sm text-muted-foreground mb-3">
+                  Complete videos in order for the best learning experience
+                </div>
+                <div className="flex gap-2">
+                  {coachingVideos.map((video, index) => (
+                    <div
+                      key={video.id}
+                      className={`w-3 h-3 rounded-full ${
+                        video.watched ? "bg-green-600" : "bg-muted"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="text-xs text-muted-foreground mt-2">
+                  {coachingVideos.filter(v => v.watched).length} of {coachingVideos.length} videos completed
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Success Stories */}
+        <TabsContent value="stories" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5" />
+                Success Stories
+              </CardTitle>
+              <CardDescription>
+                Real transformations from women who've walked this journey
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <div className="overflow-hidden rounded-lg">
+                  <div 
+                    className="flex transition-transform duration-500 ease-in-out"
+                    style={{ transform: `translateX(-${currentStoryIndex * 100}%)` }}
+                  >
+                    {successStories.map((story) => (
+                      <div key={story.id} className="w-full flex-shrink-0 p-6 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg">
+                        <div className="flex flex-col lg:flex-row gap-6">
+                          <div className="flex-shrink-0">
+                            <div className="w-32 h-32 rounded-full overflow-hidden bg-muted">
+                              <img 
+                                src={story.image} 
+                                alt={story.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="flex-1 space-y-4">
+                            <div>
+                              <h3 className="text-xl font-semibold">{story.name}</h3>
+                              <p className="text-muted-foreground">{story.location}</p>
+                            </div>
+                            
+                            <div className="relative">
+                              <Quote className="absolute -top-2 -left-2 h-8 w-8 text-primary/20" />
+                              <blockquote className="text-lg italic leading-relaxed pl-6">
+                                "{story.quote}"
+                              </blockquote>
+                            </div>
+                            
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-destructive">The Challenge:</h4>
+                                <p className="text-sm text-muted-foreground">{story.situation}</p>
+                              </div>
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-green-600">The Transformation:</h4>
+                                <p className="text-sm text-muted-foreground">{story.transformation}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-6 text-sm">
+                              <div className="text-center">
+                                <div className="font-bold text-lg text-destructive">-{story.debtReduction}</div>
+                                <div className="text-muted-foreground">Debt Eliminated</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-bold text-lg text-green-600">+{story.emergencyFund}</div>
+                                <div className="text-muted-foreground">Emergency Fund</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-bold text-lg text-primary">{story.timeframe}</div>
+                                <div className="text-muted-foreground">Timeframe</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center mt-6">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={prevStory}
+                    disabled={currentStoryIndex === 0}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Previous
+                  </Button>
+                  
+                  <div className="flex gap-2">
+                    {successStories.map((_, index) => (
+                      <button
+                        key={index}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          index === currentStoryIndex ? "bg-primary" : "bg-muted"
+                        }`}
+                        onClick={() => setCurrentStoryIndex(index)}
+                      />
+                    ))}
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={nextStory}
+                    disabled={currentStoryIndex === successStories.length - 1}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="mt-6 p-4 rounded-lg border bg-card">
+                <div className="text-center">
+                  <h4 className="font-semibold mb-2">Ready to Write Your Success Story?</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Join hundreds of women who've transformed their financial lives through biblical principles
+                  </p>
+                  <Button>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Schedule Your Free Consultation
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
