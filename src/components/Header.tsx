@@ -29,14 +29,14 @@ export const Header: React.FC = () => {
           <div className="flex items-center space-x-2 lg:space-x-4">
             <div className="hidden lg:flex items-center space-x-6 text-sm text-brand-gray">
               <a 
-                href="tel:+1234567890" 
+                href="tel:+13013810529" 
                 className="flex items-center space-x-1 hover:text-brand-green transition-colors touch-target"
               >
                 <Phone className="h-4 w-4" />
-                <span>(123) 456-7890</span>
+                <span>(301) 381-0529</span>
               </a>
               <a 
-                href="mailto:info@legacymindsetsolutions.com" 
+                href="mailto:phil@legacymindsetsolutions.com" 
                 className="flex items-center space-x-1 hover:text-brand-green transition-colors touch-target"
               >
                 <Mail className="h-4 w-4" />
