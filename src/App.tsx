@@ -4,11 +4,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { ConditionalLayout } from "@/components/ConditionalLayout";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import UserGuidePage from "./pages/UserGuide";
+import Signin from "./pages/auth/Signin";
+import Signup from "./pages/auth/Signup";
 import { PaymentCalendar } from "@/components/calendar/payment-calendar";
 import { GoalPlanning } from "@/components/calendar/goal-planning";
 import { Reminders } from "@/components/calendar/reminders";
@@ -42,38 +45,35 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <SidebarProvider>
-              <div className="min-h-screen flex w-full">
-                <AppSidebar />
-                <div className="flex-1">
-                  <header className="h-12 flex items-center border-b px-4">
-                    <SidebarTrigger />
-                  </header>
-                  <main className="p-6">
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/calculator" element={<Index />} />
-                      <Route path="/user-guide" element={<UserGuidePage />} />
-                      <Route path="/calendar" element={<PaymentCalendar debts={debts} />} />
-                      <Route path="/calendar/goals" element={<GoalPlanning debts={debts} />} />
-                      <Route path="/calendar/reminders" element={<Reminders debts={debts} />} />
-                      <Route path="/calendar/export" element={<Export debts={debts} />} />
-                      <Route path="/framework" element={<InteractiveFramework />} />
-                      <Route path="/devotionals" element={<DailyDevotionals />} />
-                      <Route path="/achievements" element={<Achievements />} />
-                      <Route path="/accountability" element={<Accountability />} />
-                      <Route path="/prayers" element={<PrayerIntegration />} />
-                      <Route path="/income-optimization" element={<IncomeOptimization />} />
-                      <Route path="/emergency-fund-calculator" element={<EmergencyFundCalculator />} />
-                      <Route path="/giving-stewardship-tracker" element={<GivingStewardshipTracker />} />
-                      <Route path="/legacy-planning" element={<LegacyPlanning />} />
-                      <Route path="/coaching" element={<CoachingIntegration />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </main>
-                </div>
-              </div>
-            </SidebarProvider>
+            <AuthProvider>
+              <ConditionalLayout>
+                <Routes>
+                  {/* Public Routes - No Authentication Required */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth/signin" element={<Signin />} />
+                  <Route path="/auth/signup" element={<Signup />} />
+                  
+                  {/* Protected Routes - Require Authentication */}
+                  <Route path="/calculator" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                  <Route path="/user-guide" element={<ProtectedRoute><UserGuidePage /></ProtectedRoute>} />
+                  <Route path="/calendar" element={<ProtectedRoute><PaymentCalendar debts={debts} /></ProtectedRoute>} />
+                  <Route path="/calendar/goals" element={<ProtectedRoute><GoalPlanning debts={debts} /></ProtectedRoute>} />
+                  <Route path="/calendar/reminders" element={<ProtectedRoute><Reminders debts={debts} /></ProtectedRoute>} />
+                  <Route path="/calendar/export" element={<ProtectedRoute><Export debts={debts} /></ProtectedRoute>} />
+                  <Route path="/framework" element={<ProtectedRoute><InteractiveFramework /></ProtectedRoute>} />
+                  <Route path="/devotionals" element={<ProtectedRoute><DailyDevotionals /></ProtectedRoute>} />
+                  <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+                  <Route path="/accountability" element={<ProtectedRoute><Accountability /></ProtectedRoute>} />
+                  <Route path="/prayers" element={<ProtectedRoute><PrayerIntegration /></ProtectedRoute>} />
+                  <Route path="/income-optimization" element={<ProtectedRoute><IncomeOptimization /></ProtectedRoute>} />
+                  <Route path="/emergency-fund-calculator" element={<ProtectedRoute><EmergencyFundCalculator /></ProtectedRoute>} />
+                  <Route path="/giving-stewardship-tracker" element={<ProtectedRoute><GivingStewardshipTracker /></ProtectedRoute>} />
+                  <Route path="/legacy-planning" element={<ProtectedRoute><LegacyPlanning /></ProtectedRoute>} />
+                  <Route path="/coaching" element={<ProtectedRoute><CoachingIntegration /></ProtectedRoute>} />
+                  <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+                </Routes>
+              </ConditionalLayout>
+            </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
