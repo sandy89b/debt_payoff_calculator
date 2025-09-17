@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS users (
   provider VARCHAR(20) DEFAULT 'local', -- 'local' or 'google'
   avatar_url TEXT, -- For OAuth users
   email_verified BOOLEAN DEFAULT FALSE,
+  verification_code VARCHAR(6), -- six-digit code
+  verification_expires_at TIMESTAMP, -- expiry for code
+  
+  -- Password reset fields
+  password_reset_token VARCHAR(255), -- JWT token for password reset
+  password_reset_expires_at TIMESTAMP, -- expiry for reset token
   
   -- User preferences and settings
   theme_preference VARCHAR(10) DEFAULT 'light', -- 'light', 'dark', 'system'
@@ -309,6 +315,7 @@ CREATE TABLE IF NOT EXISTS data_exports (
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider);
+CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token);
 
 -- Debt indexes
 CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);

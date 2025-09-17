@@ -19,4 +19,12 @@ router.post('/signin', validateSignin, AuthController.signin);
 // @access  Private (TODO: Add JWT middleware)
 router.get('/profile', AuthController.getProfile);
 
+// Verification code endpoints
+router.post('/verify-code', AuthController.verifyCode);
+router.post('/resend-code', AuthController.resendCode);
+
+// Password reset endpoints
+router.post('/forgot-password', AuthController.forgotPassword);
+router.post('/reset-password', AuthController.resetPassword);
+
 module.exports = router;
