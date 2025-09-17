@@ -3,12 +3,15 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 require('dotenv').config({ path: './config.env' });
 
 const { initializeDatabase } = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const googleAuthRoutes = require('./routes/googleAuthRoutes');
+const pourPayoffRoutes = require('./routes/pourPayoffRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,6 +41,7 @@ app.use('/api/', limiter);
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // Logging middleware
 if (process.env.NODE_ENV === 'development') {
@@ -56,6 +60,8 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/google', googleAuthRoutes);
+app.use('/api/pour-payoff', pourPayoffRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -85,8 +91,6 @@ const startServer = async () => {
     // Start listening
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-      console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL}`);
       console.log(`💾 Database: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
     });
   } catch (error) {

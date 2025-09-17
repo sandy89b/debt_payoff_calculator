@@ -16,40 +16,40 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-gray-50 shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-soft">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
+        <div className="flex items-center justify-between gap-3">
           {/* Left side - Sidebar trigger and Logo */}
-          <div className="flex items-center space-x-3">
-            <SidebarTrigger className="md:hidden text-gray-700 hover:text-brand-green transition-colors p-2" />
+          <div className="flex items-center gap-3">
+            <SidebarTrigger className="md:hidden text-foreground/80 hover:text-primary transition-colors p-2" />
             <img 
               src="/lovable-uploads/45e07ccd-ab70-45c2-aec8-3ab85f43ded3.png" 
               alt="Legacy Mindset Solutions Logo" 
-              className="h-12 w-auto"
+              className="h-10 w-auto md:h-12"
             />
             <div className="hidden md:block">
-              <h1 className="text-xl font-bold text-gray-800">
+              <h1 className="text-lg md:text-xl font-bold text-foreground">
                 Legacy Mindset Solutions
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Harmony in Finance, Harmony in Life
               </p>
             </div>
           </div>
 
           {/* Contact Info & CTA */}
-          <div className="flex items-center space-x-2 lg:space-x-4">
-            <div className="hidden lg:flex items-center space-x-6 text-sm text-gray-700">
+          <div className="flex items-center gap-2 lg:gap-4">
+            <div className="hidden lg:flex items-center gap-6 text-sm text-foreground/80">
               <a 
                 href="tel:+13013810529" 
-                className="flex items-center space-x-1 hover:text-brand-green transition-colors touch-target"
+                className="flex items-center gap-1 hover:text-primary transition-colors touch-target"
               >
                 <Phone className="h-4 w-4" />
                 <span>(301) 381-0529</span>
               </a>
               <a 
                 href="mailto:phil@legacymindsetsolutions.com" 
-                className="flex items-center space-x-1 hover:text-brand-green transition-colors touch-target"
+                className="flex items-center gap-1 hover:text-primary transition-colors touch-target"
               >
                 <Mail className="h-4 w-4" />
                 <span>Contact Us</span>
@@ -58,7 +58,7 @@ export const Header: React.FC = () => {
                 href="https://legacymindsetsolutions.com" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-1 hover:text-brand-green transition-colors touch-target"
+                className="flex items-center gap-1 hover:text-primary transition-colors touch-target"
               >
                 <Globe className="h-4 w-4" />
                 <span>Website</span>
@@ -76,8 +76,8 @@ export const Header: React.FC = () => {
             </Button>
             
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2 text-sm text-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-foreground/80">
                   <User className="h-4 w-4" />
                   <span className="hidden sm:inline">
                     {user?.firstName && user?.lastName 

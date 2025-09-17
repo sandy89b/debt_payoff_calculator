@@ -5,7 +5,9 @@ interface AuthContextType {
   user: User | null;
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (userData: SignUpData) => Promise<boolean>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => void;
+  refreshAuth: () => void;
   isLoading: boolean;
 }
 
@@ -23,6 +25,9 @@ interface User {
   firstName?: string;
   lastName?: string;
   name?: string;
+  provider?: string;
+  avatarUrl?: string;
+  emailVerified?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,6 +65,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     checkAuthStatus();
+
+    // Listen for storage changes (for OAuth success)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_status' || e.key === 'user_data') {
+        checkAuthStatus();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check periodically for OAuth success (since storage event doesn't fire on same tab)
+    const interval = setInterval(checkAuthStatus, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, []);
 
   const signIn = async (email: string, password: string): Promise<boolean> => {
@@ -139,6 +161,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      // Get Google OAuth URL from backend
+      const response = await fetch('http://localhost:3001/api/auth/google/url');
+      const result = await response.json();
+      
+      if (result.success) {
+        // Redirect to Google OAuth
+        window.location.href = result.authUrl;
+      } else {
+        throw new Error('Failed to get Google OAuth URL');
+      }
+    } catch (error) {
+      console.error('Google OAuth error:', error);
+      throw error;
+    }
+  };
+
   const signOut = () => {
     // Clear authentication state
     localStorage.removeItem('auth_status');
@@ -148,12 +188,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const refreshAuth = () => {
+    try {
+      const authStatus = localStorage.getItem('auth_status');
+      const userData = localStorage.getItem('user_data');
+      
+      if (authStatus === '1' && userData) {
+        const parsedUser = JSON.parse(userData);
+        setIsAuthenticated(true);
+        setUser(parsedUser);
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error refreshing auth status:', error);
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
   const value: AuthContextType = {
     isAuthenticated,
     user,
     signIn,
     signUp,
+    signInWithGoogle,
     signOut,
+    refreshAuth,
     isLoading
   };
 

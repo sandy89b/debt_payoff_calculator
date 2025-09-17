@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Header } from '@/components/Header';
 
@@ -28,12 +28,14 @@ export const ConditionalLayout: React.FC<ConditionalLayoutProps> = ({ children }
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <div className="flex-1 flex flex-col">
+        <SidebarInset>
           <Header />
-          <main className="flex-1 p-6">
-            {children}
+          <main className="flex-1 px-4 py-6 md:px-6">
+            <div className="mx-auto w-full max-w-7xl">
+              {children}
+            </div>
           </main>
-        </div>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   );

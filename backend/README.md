@@ -5,8 +5,10 @@ This is the backend API for the Debt Freedom Builder Bible application, built wi
 ## Features
 
 - User authentication (signup/signin)
+- Google OAuth integration
 - PostgreSQL database integration
 - Password hashing with bcrypt
+- JWT token authentication
 - Input validation with Joi
 - Rate limiting and security middleware
 - CORS configuration
@@ -61,6 +63,11 @@ JWT_EXPIRES_IN=7d
 
 # CORS Configuration
 FRONTEND_URL=http://localhost:8080
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=http://localhost:3001/api/auth/google/callback
 ```
 
 ## API Endpoints
@@ -70,6 +77,12 @@ FRONTEND_URL=http://localhost:8080
 - `POST /api/auth/signup` - Register a new user
 - `POST /api/auth/signin` - Sign in user
 - `GET /api/auth/profile` - Get current user profile (requires authentication)
+
+### Google OAuth
+
+- `GET /api/auth/google/url` - Get Google OAuth URL
+- `GET /api/auth/google/callback` - Handle Google OAuth callback
+- `POST /api/auth/google/verify` - Verify JWT token
 
 ### Health Check
 
@@ -85,7 +98,11 @@ CREATE TABLE users (
   first_name VARCHAR(50) NOT NULL,
   last_name VARCHAR(50) NOT NULL,
   email VARCHAR(100) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255), -- Nullable for OAuth users
+  google_id VARCHAR(100) UNIQUE, -- For Google OAuth users
+  provider VARCHAR(20) DEFAULT 'local', -- 'local' or 'google'
+  avatar_url TEXT, -- For OAuth users
+  email_verified BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

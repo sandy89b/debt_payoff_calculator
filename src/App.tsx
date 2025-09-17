@@ -12,6 +12,8 @@ import NotFound from "./pages/NotFound";
 import UserGuidePage from "./pages/UserGuide";
 import Signin from "./pages/auth/Signin";
 import Signup from "./pages/auth/Signup";
+import OAuthSuccess from "./pages/auth/OAuthSuccess";
+import OAuthError from "./pages/auth/OAuthError";
 import { PaymentCalendar } from "@/components/calendar/payment-calendar";
 import { GoalPlanning } from "@/components/calendar/goal-planning";
 import { Reminders } from "@/components/calendar/reminders";
@@ -52,6 +54,8 @@ const App = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/auth/signin" element={<Signin />} />
                   <Route path="/auth/signup" element={<Signup />} />
+                  <Route path="/auth/success" element={<OAuthSuccess />} />
+                  <Route path="/auth/error" element={<OAuthError />} />
                   
                   {/* Protected Routes - Require Authentication */}
                   <Route path="/calculator" element={<ProtectedRoute><Index /></ProtectedRoute>} />
