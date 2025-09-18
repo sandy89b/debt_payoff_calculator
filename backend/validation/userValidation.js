@@ -1,51 +1,51 @@
 const Joi = require('joi');
 
-// User signup validation schema
+// Validation schemas
 const signupSchema = Joi.object({
   firstName: Joi.string()
     .min(2)
     .max(50)
-    .pattern(/^[a-zA-Z\s]+$/)
     .required()
     .messages({
+      'string.empty': 'First name is required',
       'string.min': 'First name must be at least 2 characters long',
-      'string.max': 'First name must not exceed 50 characters',
-      'string.pattern.base': 'First name can only contain letters and spaces',
+      'string.max': 'First name cannot exceed 50 characters',
       'any.required': 'First name is required'
     }),
-
+  
   lastName: Joi.string()
     .min(2)
     .max(50)
-    .pattern(/^[a-zA-Z\s]+$/)
     .required()
     .messages({
+      'string.empty': 'Last name is required',
       'string.min': 'Last name must be at least 2 characters long',
-      'string.max': 'Last name must not exceed 50 characters',
-      'string.pattern.base': 'Last name can only contain letters and spaces',
+      'string.max': 'Last name cannot exceed 50 characters',
       'any.required': 'Last name is required'
     }),
-
+  
   email: Joi.string()
     .email()
-    .max(100)
     .required()
     .messages({
       'string.email': 'Please provide a valid email address',
-      'string.max': 'Email must not exceed 100 characters',
+      'string.empty': 'Email is required',
       'any.required': 'Email is required'
     }),
-
+  
   password: Joi.string()
-    .min(6)
+    .min(8)
     .max(128)
+    .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]'))
     .required()
     .messages({
-      'string.min': 'Password must be at least 6 characters long',
-      'string.max': 'Password must not exceed 128 characters',
+      'string.empty': 'Password is required',
+      'string.min': 'Password must be at least 8 characters long',
+      'string.max': 'Password cannot exceed 128 characters',
+      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
       'any.required': 'Password is required'
     }),
-
+  
   confirmPassword: Joi.string()
     .valid(Joi.ref('password'))
     .required()
@@ -55,63 +55,76 @@ const signupSchema = Joi.object({
     })
 });
 
-// User signin validation schema
 const signinSchema = Joi.object({
   email: Joi.string()
     .email()
     .required()
     .messages({
       'string.email': 'Please provide a valid email address',
+      'string.empty': 'Email is required',
       'any.required': 'Email is required'
     }),
-
+  
   password: Joi.string()
     .required()
     .messages({
+      'string.empty': 'Password is required',
       'any.required': 'Password is required'
     })
 });
 
-// Validation middleware
+// Middleware functions
 const validateSignup = (req, res, next) => {
-  console.log('Validating signup data:', req.body);
-  
-  const { error, value } = signupSchema.validate(req.body, { abortEarly: false });
-  
+  const { error, value } = signupSchema.validate(req.body, { 
+    abortEarly: false,
+    allowUnknown: false,
+    stripUnknown: true
+  });
+
   if (error) {
-    console.log('Validation errors:', error.details);
-    const errors = error.details.map(detail => detail.message);
+    const errors = error.details.map(detail => ({
+      field: detail.path.join('.'),
+      message: detail.message
+    }));
+
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
       errors: errors
     });
   }
-  
-  console.log('Validation successful:', value);
-  req.validatedData = value;
+
+  req.body = value;
   next();
 };
 
 const validateSignin = (req, res, next) => {
-  const { error, value } = signinSchema.validate(req.body, { abortEarly: false });
-  
+  const { error, value } = signinSchema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: false,
+    stripUnknown: true
+  });
+
   if (error) {
-    const errors = error.details.map(detail => detail.message);
+    const errors = error.details.map(detail => ({
+      field: detail.path.join('.'),
+      message: detail.message
+    }));
+
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
       errors: errors
     });
   }
-  
-  req.validatedData = value;
+
+  req.body = value;
   next();
 };
 
 module.exports = {
-  signupSchema,
-  signinSchema,
   validateSignup,
-  validateSignin
+  validateSignin,
+  signupSchema,
+  signinSchema
 };

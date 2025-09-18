@@ -25,7 +25,7 @@ export const OAuthSuccess: React.FC = () => {
       .then(result => {
         if (result.success) {
           // Store user data
-          localStorage.setItem('auth_status', '1');
+          localStorage.setItem('auth_status', 'authenticated');
           localStorage.setItem('user_data', JSON.stringify(result.data.user));
           
           // Refresh authentication state
@@ -39,13 +39,12 @@ export const OAuthSuccess: React.FC = () => {
           // Small delay to ensure state is updated before redirect
           setTimeout(() => {
             navigate('/', { replace: true });
-          }, 100);
+          }, 500);
         } else {
           throw new Error(result.message || 'Token verification failed');
         }
       })
       .catch(error => {
-        console.error('OAuth verification error:', error);
         toast({
           title: "Error",
           description: "Failed to verify authentication. Please try again.",
@@ -57,7 +56,7 @@ export const OAuthSuccess: React.FC = () => {
       // No token, redirect to signin
       navigate('/auth/signin', { replace: true });
     }
-  }, [searchParams, navigate, toast]);
+  }, [searchParams, navigate, toast, refreshAuth]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-green/5 to-brand-charcoal/5 flex items-center justify-center p-4">

@@ -12,6 +12,7 @@ const { initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const googleAuthRoutes = require('./routes/googleAuthRoutes');
 const pourPayoffRoutes = require('./routes/pourPayoffRoutes');
+const emailAutomationRoutes = require('./routes/emailAutomationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,12 +31,13 @@ app.use(cors({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.'
   }
 });
+
 app.use('/api/', limiter);
 
 // Body parsing middleware
@@ -46,6 +48,8 @@ app.use(cookieParser());
 // Logging middleware
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
 }
 
 // Health check endpoint
@@ -62,6 +66,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/google', googleAuthRoutes);
 app.use('/api/pour-payoff', pourPayoffRoutes);
+app.use('/api/email-automation', emailAutomationRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -87,6 +92,7 @@ const startServer = async () => {
   try {
     // Initialize database
     await initializeDatabase();
+    console.log('✅ Database tables initialized successfully');
     
     // Start listening
     app.listen(PORT, () => {
@@ -99,27 +105,16 @@ const startServer = async () => {
   }
 };
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled Promise Rejection:', err);
-  process.exit(1);
-});
-
 // Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
   process.exit(1);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received. Shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('🛑 SIGINT received. Shutting down gracefully...');
-  process.exit(0);
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 // Start the server

@@ -63,11 +63,7 @@ export const Signin: React.FC = () => {
   };
 
   const handleForgotPassword = () => {
-    // TODO: Implement forgot password functionality
-    toast({
-      title: "Forgot Password",
-      description: "Password reset functionality will be implemented soon.",
-    });
+    navigate('/auth/forgot-password');
   };
 
   const handleGoogleSignIn = async () => {
@@ -209,7 +205,7 @@ export const Signin: React.FC = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full mt-4 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5"
+                className="w-full mt-4 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 flex items-center justify-center"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
               >

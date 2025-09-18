@@ -19,9 +19,11 @@ export const Signup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [code, setCode] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp, signInWithGoogle, isLoading } = useAuth();
+  const { signUp, verifyCode, resendCode, signInWithGoogle, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +66,7 @@ export const Signup: React.FC = () => {
     }
 
     try {
-      const success = await signUp({
+      const result = await signUp({
         firstName,
         lastName,
         email,
@@ -72,13 +74,21 @@ export const Signup: React.FC = () => {
         confirmPassword
       });
       
-      if (success) {
+      if (result.success && result.requiresVerification) {
+        setPendingEmail(email);
+        setCode('');
+        toast({
+          title: 'Verify your email',
+          description: 'We sent a 6-digit code to your email. Enter it below to finish creating your account.'
+        });
+        return;
+      }
+
+      if (result.success) {
         toast({
           title: "Success",
           description: "Account created successfully! Welcome to Legacy Mindset Solutions.",
         });
-        
-        // Redirect to dashboard after successful signup
         navigate('/', { replace: true });
       } else {
         toast({
@@ -94,6 +104,29 @@ export const Signup: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingEmail) return;
+    if (code.length !== 6) {
+      toast({ title: 'Invalid code', description: 'Enter the 6-digit code from your email.', variant: 'destructive' });
+      return;
+    }
+    const ok = await verifyCode(pendingEmail, code);
+    if (ok) {
+      toast({ title: 'Email verified', description: 'Welcome!' });
+      navigate('/', { replace: true });
+    } else {
+      toast({ title: 'Verification failed', description: 'The code was invalid or expired.', variant: 'destructive' });
+    }
+  };
+
+  const handleResend = async () => {
+    if (!pendingEmail) return;
+    const ok = await resendCode(pendingEmail);
+    if (ok) toast({ title: 'Code sent', description: 'Check your email for a new code.' });
+    else toast({ title: 'Resend failed', description: 'Please try again later.', variant: 'destructive' });
   };
 
   const handleGoogleSignIn = async () => {
@@ -132,14 +165,15 @@ export const Signup: React.FC = () => {
               />
             </div>
             <CardTitle className="text-2xl font-bold text-brand-charcoal">
-              Create Your Account
+              {pendingEmail ? 'Verify Your Email' : 'Create Your Account'}
             </CardTitle>
             <CardDescription className="text-brand-gray">
-              Join us on your journey to financial freedom and legacy building
+              {pendingEmail ? `Enter the code we sent to ${pendingEmail}` : 'Join us on your journey to financial freedom and legacy building'}
             </CardDescription>
           </CardHeader>
 
           <CardContent>
+            {!pendingEmail ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-4">
@@ -282,9 +316,36 @@ export const Signup: React.FC = () => {
                 {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
+            ) : (
+              <form onSubmit={handleVerify} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="code" className="text-sm font-medium text-brand-charcoal">
+                    Enter 6-digit verification code
+                  </Label>
+                  <Input
+                    id="code"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="______"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="text-center tracking-widest text-lg"
+                    required
+                  />
+                  <p className="text-xs text-brand-gray">We sent a code to {pendingEmail}. It expires in 15 minutes.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1 bg-gradient-hero text-white">Verify</Button>
+                  <Button type="button" variant="outline" onClick={handleResend}>Resend</Button>
+                </div>
+              </form>
+            )}
+          </CardContent>
 
-            {/* Google OAuth Section */}
-            <div className="mt-6">
+          <CardFooter className="flex flex-col space-y-4">
+            <Separator className="bg-brand-gray/20" />
+            {!pendingEmail && (
+            <div className="mt-0">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <Separator className="w-full" />
@@ -297,7 +358,7 @@ export const Signup: React.FC = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full mt-4 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5"
+                className="w-full mt-4 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 flex items-center justify-center"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
               >
@@ -324,11 +385,8 @@ export const Signup: React.FC = () => {
                 </span>
               </Button>
             </div>
-          </CardContent>
+            )}
 
-          <CardFooter className="flex flex-col space-y-4">
-            <Separator className="bg-brand-gray/20" />
-            
             {/* Already have an account */}
             <div className="text-center">
               <p className="text-sm text-brand-gray">

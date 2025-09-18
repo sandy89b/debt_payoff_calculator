@@ -4,7 +4,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   signIn: (email: string, password: string) => Promise<boolean>;
-  signUp: (userData: SignUpData) => Promise<boolean>;
+  signUp: (userData: SignUpData) => Promise<{ success: boolean; requiresVerification?: boolean; email?: string; user?: User | null }>;
+  verifyCode: (email: string, code: string) => Promise<boolean>;
+  resendCode: (email: string) => Promise<boolean>;
+  forgotPassword: (email: string) => Promise<boolean>;
+  resetPassword: (token: string, newPassword: string) => Promise<boolean>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => void;
   refreshAuth: () => void;
@@ -41,151 +45,232 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Check for existing authentication on app load
   useEffect(() => {
     const checkAuthStatus = () => {
       try {
         const authStatus = localStorage.getItem('auth_status');
         const userData = localStorage.getItem('user_data');
         
-        if (authStatus === '1' && userData) {
+        if (authStatus === 'authenticated' && userData) {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
           setIsAuthenticated(true);
-          setUser(JSON.parse(userData));
-        } else {
-          setIsAuthenticated(false);
-          setUser(null);
         }
       } catch (error) {
-        console.error('Error checking auth status:', error);
-        setIsAuthenticated(false);
-        setUser(null);
+        // Clear invalid data silently
+        localStorage.removeItem('auth_status');
+        localStorage.removeItem('user_data');
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuthStatus();
-
-    // Listen for storage changes (for OAuth success)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth_status' || e.key === 'user_data') {
-        checkAuthStatus();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    // Also check periodically for OAuth success (since storage event doesn't fire on same tab)
-    const interval = setInterval(checkAuthStatus, 1000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
   }, []);
 
   const signIn = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
     try {
+      setIsLoading(true);
+      
       const response = await fetch('http://localhost:3001/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email,
-          password
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Sign in failed');
+      if (data.success && data.data?.user) {
+        const userData = data.data.user;
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        localStorage.setItem('auth_status', 'authenticated');
+        localStorage.setItem('user_data', JSON.stringify(userData));
+        
+        return true;
       }
-
-      // Store authentication state
-      localStorage.setItem('auth_status', '1');
-      localStorage.setItem('user_data', JSON.stringify(result.data.user));
       
-      setIsAuthenticated(true);
-      setUser(result.data.user);
-      
-      return true;
+      return false;
     } catch (error) {
-      console.error('Sign in error:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signUp = async (userData: SignUpData): Promise<boolean> => {
-    setIsLoading(true);
-    
+  const signUp = async (userData: SignUpData): Promise<{ success: boolean; requiresVerification?: boolean; email?: string; user?: User | null }> => {
     try {
+      setIsLoading(true);
+      
       const response = await fetch('http://localhost:3001/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          password: userData.password,
-          confirmPassword: userData.confirmPassword
-        }),
+        body: JSON.stringify(userData),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Signup failed');
+      if (data.success) {
+        if (data.data?.requiresVerification) {
+          return {
+            success: true,
+            requiresVerification: true,
+            email: userData.email
+          };
+        } else if (data.data?.user) {
+          setUser(data.data.user);
+          setIsAuthenticated(true);
+          localStorage.setItem('auth_status', 'authenticated');
+          localStorage.setItem('user_data', JSON.stringify(data.data.user));
+          
+          return {
+            success: true,
+            user: data.data.user
+          };
+        }
       }
-
-      // Store authentication state
-      localStorage.setItem('auth_status', '1');
-      localStorage.setItem('user_data', JSON.stringify(result.data.user));
       
-      setIsAuthenticated(true);
-      setUser(result.data.user);
-      
-      return true;
+      return { success: false };
     } catch (error) {
-      console.error('Sign up error:', error);
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyCode = async (email: string, code: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch('http://localhost:3001/api/auth/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data?.user) {
+        const userData = data.data.user;
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        localStorage.setItem('auth_status', 'authenticated');
+        localStorage.setItem('user_data', JSON.stringify(userData));
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signInWithGoogle = async () => {
+  const resendCode = async (email: string): Promise<boolean> => {
     try {
-      // Get Google OAuth URL from backend
-      const response = await fetch('http://localhost:3001/api/auth/google/url');
-      const result = await response.json();
+      setIsLoading(true);
       
-      if (result.success) {
-        // Redirect to Google OAuth
-        window.location.href = result.authUrl;
+      const response = await fetch('http://localhost:3001/api/auth/resend-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const forgotPassword = async (email: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch('http://localhost:3001/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (token: string, newPassword: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch('http://localhost:3001/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, newPassword }),
+      });
+
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signInWithGoogle = async (): Promise<void> => {
+    try {
+      setIsLoading(true);
+      
+      // First, get the Google OAuth URL from the backend
+      const response = await fetch('http://localhost:3001/api/auth/google/url', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.authUrl) {
+        // Redirect to the Google OAuth URL
+        window.location.href = data.authUrl;
       } else {
-        throw new Error('Failed to get Google OAuth URL');
+        throw new Error(data.message || 'Failed to get Google OAuth URL');
       }
     } catch (error) {
-      console.error('Google OAuth error:', error);
-      throw error;
+      // Google OAuth initiation failed
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signOut = () => {
-    // Clear authentication state
+    setUser(null);
+    setIsAuthenticated(false);
     localStorage.removeItem('auth_status');
     localStorage.removeItem('user_data');
-    
-    setIsAuthenticated(false);
-    setUser(null);
   };
 
   const refreshAuth = () => {
@@ -193,18 +278,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const authStatus = localStorage.getItem('auth_status');
       const userData = localStorage.getItem('user_data');
       
-      if (authStatus === '1' && userData) {
+      if (authStatus === 'authenticated' && userData) {
         const parsedUser = JSON.parse(userData);
-        setIsAuthenticated(true);
         setUser(parsedUser);
+        setIsAuthenticated(true);
       } else {
-        setIsAuthenticated(false);
         setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('Error refreshing auth status:', error);
-      setIsAuthenticated(false);
       setUser(null);
+      setIsAuthenticated(false);
     }
   };
 
@@ -213,10 +297,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     signIn,
     signUp,
+    verifyCode,
+    resendCode,
+    forgotPassword,
+    resetPassword,
     signInWithGoogle,
     signOut,
     refreshAuth,
-    isLoading
+    isLoading,
   };
 
   return (
