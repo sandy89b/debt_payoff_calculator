@@ -75,7 +75,9 @@ class User {
           throw new Error('Failed to update user');
         }
         
-        return new User(result.rows[0]);
+        const updatedUser = new User(result.rows[0]);
+        updatedUser.isNewUser = false;
+        return updatedUser;
       }
       
       // Check if user exists with same email
@@ -97,8 +99,7 @@ class User {
         }
         
         const user = new User(result.rows[0]);
-        
-        
+        user.isNewUser = false; // Existing user, just linked to Google
         return user;
       }
       
@@ -117,8 +118,7 @@ class User {
       }
       
       const newUser = new User(result.rows[0]);
-      
-      
+      newUser.isNewUser = true; // Brand new user
       return newUser;
     } catch (error) {
       if (error.code === '23505') { // Unique constraint violation

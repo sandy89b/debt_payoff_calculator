@@ -1,6 +1,8 @@
 const { google } = require('googleapis');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const logger = require('../utils/logger');
+const emailAutomationService = require('../services/emailAutomationService');
 
 class GoogleAuthController {
   // Generate Google OAuth URL
@@ -84,7 +86,23 @@ class GoogleAuthController {
         avatarUrl
       });
       
-      console.log('OAuth user processed successfully:', { id: user.id, email: user.email, provider: user.provider });
+      console.log('OAuth user processed successfully:', { id: user.id, email: user.email, provider: user.provider, isNewUser: user.isNewUser });
+
+      // Trigger welcome email automation for new users
+      // Note: OAuth users have verified emails by default, so welcome email is sent immediately
+      if (user.isNewUser) {
+        try {
+          await emailAutomationService.triggerCampaignByEvent('user_signup', user.id, {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email
+          });
+          logger.info('Welcome email automation triggered for OAuth user', { userId: user.id, email: user.email });
+        } catch (emailError) {
+          // Don't fail OAuth if email automation fails
+          logger.error('Failed to trigger welcome email automation for OAuth user', emailError.message);
+        }
+      }
 
       // Generate JWT token
       const token = jwt.sign(

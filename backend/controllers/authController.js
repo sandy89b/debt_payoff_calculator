@@ -3,6 +3,7 @@ const { pool } = require('../config/database');
 const sgMail = require('@sendgrid/mail');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
+const emailAutomationService = require('../services/emailAutomationService');
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -255,6 +256,20 @@ class AuthController {
       );
 
       const user = await User.findById(row.id);
+      
+      // Trigger welcome email automation after email verification
+      try {
+        await emailAutomationService.triggerCampaignByEvent('user_signup', user.id, {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email
+        });
+        logger.info('Welcome email automation triggered after verification', { userId: user.id, email: user.email });
+      } catch (emailError) {
+        // Don't fail verification if email automation fails
+        logger.error('Failed to trigger welcome email automation after verification', emailError.message);
+      }
+      
       logger.authSuccess('email verification', email);
       
       return res.json({ 

@@ -397,7 +397,97 @@ class EmailAutomationService {
     }
   }
 
-  // Trigger workflow based on event
+  // Trigger campaigns by event (simplified version for direct campaign triggering)
+  async triggerCampaignByEvent(triggerEvent, userId, eventData = {}) {
+    try {
+      // Get active campaigns for this trigger event
+      const query = `
+        SELECT c.*, t.html_content, t.text_content, t.subject, t.variables
+        FROM email_campaigns c
+        LEFT JOIN email_templates t ON c.template_id = t.id
+        WHERE c.trigger_event = $1 AND c.is_active = true
+      `;
+      const result = await pool.query(query, [triggerEvent]);
+
+      for (const campaign of result.rows) {
+        try {
+          // Check if campaign has a template
+          if (!campaign.template_id) {
+            logger.warn('Campaign has no template assigned', { campaignId: campaign.id, triggerEvent });
+            continue;
+          }
+
+          // Check if user meets target criteria
+          if (campaign.target_criteria) {
+            const userData = await this.getUserData(userId);
+            // Handle both JSON string and object formats
+            let criteria = campaign.target_criteria;
+            if (typeof criteria === 'string') {
+              try {
+                criteria = JSON.parse(criteria);
+              } catch (error) {
+                logger.error('Invalid JSON in target_criteria', { campaignId: campaign.id, criteria });
+                continue;
+              }
+            }
+            if (!this.matchesTargetCriteria(userData, criteria)) {
+              logger.info('User does not meet campaign criteria', { campaignId: campaign.id, userId });
+              continue;
+            }
+          }
+
+          // Get user data for template variables
+          const userData = await this.getUserData(userId);
+          const templateVariables = {
+            firstName: userData.first_name || eventData.firstName,
+            lastName: userData.last_name || eventData.lastName,
+            email: userData.email || eventData.email,
+            ...eventData
+          };
+
+          // Process template with variables
+          const processedTemplate = this.processTemplate({
+            subject: campaign.subject,
+            html_content: campaign.html_content,
+            text_content: campaign.text_content
+          }, templateVariables);
+
+          // Send email
+          await this.sendEmail(
+            userData.email || eventData.email,
+            processedTemplate.subject,
+            processedTemplate.html_content,
+            processedTemplate.text_content
+          );
+
+          // Record the email send
+          await this.recordEmailSend(
+            userId,
+            campaign.id,
+            campaign.template_id,
+            userData.email || eventData.email,
+            processedTemplate.subject,
+            processedTemplate.html_content,
+            processedTemplate.text_content
+          );
+          
+          logger.info('Campaign triggered successfully', { 
+            triggerEvent, 
+            userId, 
+            campaignId: campaign.id,
+            campaignName: campaign.name
+          });
+        } catch (error) {
+          logger.error('Error in campaign execution', error.message);
+        }
+      }
+    } catch (error) {
+      logger.error('Error triggering campaign by event', error.message);
+      throw error;
+    }
+  }
+
+  // Trigger workflow based on event (legacy method)
   async triggerWorkflow(triggerEvent, userId, eventData = {}) {
     try {
       // Get active workflows for this trigger
@@ -437,6 +527,50 @@ class EmailAutomationService {
     } catch (error) {
       logger.error('Error triggering workflow', error.message);
       throw error;
+    }
+  }
+
+  // Get user data for template processing
+  async getUserData(userId) {
+    try {
+      const query = `
+        SELECT id, first_name, last_name, email, created_at
+        FROM users 
+        WHERE id = $1
+      `;
+      const result = await pool.query(query, [userId]);
+      
+      if (result.rows.length === 0) {
+        throw new Error(`User not found: ${userId}`);
+      }
+      
+      return result.rows[0];
+    } catch (error) {
+      logger.error('Error getting user data', error.message);
+      throw error;
+    }
+  }
+
+  // Record email send for tracking
+  async recordEmailSend(userId, campaignId, templateId, recipientEmail, subject, htmlContent, textContent) {
+    try {
+      const query = `
+        INSERT INTO email_sends (
+          user_id, campaign_id, template_id, recipient_email, subject, 
+          html_content, text_content, status, sent_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'sent', NOW())
+        RETURNING id
+      `;
+      
+      const result = await pool.query(query, [
+        userId, campaignId, templateId, recipientEmail, subject, htmlContent, textContent
+      ]);
+      
+      return result.rows[0].id;
+    } catch (error) {
+      logger.error('Error recording email send', error.message);
+      // Don't throw error - we don't want to fail email sending if recording fails
     }
   }
 

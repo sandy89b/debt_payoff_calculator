@@ -94,7 +94,8 @@ const validateSignup = (req, res, next) => {
     });
   }
 
-  req.body = value;
+  req.validatedData = value;
+  req.body = value; // Keep for backward compatibility
   next();
 };
 
@@ -118,7 +119,8 @@ const validateSignin = (req, res, next) => {
     });
   }
 
-  req.body = value;
+  req.validatedData = value;
+  req.body = value; // Keep for backward compatibility
   next();
 };
 
