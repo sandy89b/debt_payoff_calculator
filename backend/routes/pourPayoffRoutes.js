@@ -4,6 +4,8 @@ const Debt = require('../models/Debt');
 const FrameworkStep = require('../models/FrameworkStep');
 const Devotional = require('../models/Devotional');
 const User = require('../models/User');
+const emailAutomationService = require('../services/emailAutomationService');
+const logger = require('../utils/logger');
 
 // =============================================
 // DEBT MANAGEMENT ROUTES
@@ -36,6 +38,22 @@ router.post('/debts', async (req, res) => {
     }
     
     const debt = await Debt.create(userId, debtData);
+    
+    // Check if this is the user's first debt entry for email automation
+    const allDebts = await Debt.findByUserId(userId);
+    if (allDebts.length === 1) { // First debt entry
+      try {
+        const totalDebt = allDebts.reduce((sum, debt) => sum + parseFloat(debt.balance || 0), 0);
+        await emailAutomationService.triggerFirstDebtEntry(userId, {
+          debtCount: allDebts.length,
+          totalDebt: totalDebt
+        });
+        logger.info('First debt entry email triggered', { userId, debtCount: allDebts.length });
+      } catch (emailError) {
+        logger.error('Failed to trigger first debt entry email', emailError.message);
+      }
+    }
+    
     res.status(201).json({ success: true, data: debt });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -87,6 +105,26 @@ router.post('/debts/calculate-payoff', async (req, res) => {
     const { extraPayment = 0 } = req.body;
     
     const scenarios = await Debt.calculatePayoffScenarios(userId, extraPayment);
+    
+    // Trigger calculator usage email automation
+    try {
+      const snowballScenario = scenarios.find(s => s.method === 'snowball');
+      const avalancheScenario = scenarios.find(s => s.method === 'avalanche');
+      
+      if (snowballScenario || avalancheScenario) {
+        const bestScenario = snowballScenario || avalancheScenario;
+        await emailAutomationService.triggerCalculatorUsed(userId, {
+          strategy: bestScenario.method === 'snowball' ? 'Debt Snowball' : 'Debt Avalanche',
+          monthsToPayoff: bestScenario.totalMonths,
+          totalInterest: bestScenario.totalInterest,
+          extraPayment: extraPayment
+        });
+        logger.info('Calculator usage email triggered', { userId, strategy: bestScenario.method });
+      }
+    } catch (emailError) {
+      logger.error('Failed to trigger calculator usage email', emailError.message);
+    }
+    
     res.json({ success: true, data: scenarios });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -126,6 +164,36 @@ router.put('/framework/steps/:stepId/progress', async (req, res) => {
     const progressData = req.body;
     
     const progress = await FrameworkStep.updateUserProgress(userId, stepId, progressData);
+    
+    // Trigger framework step completion email automation
+    if (progressData.isComplete || progressData.completed) {
+      try {
+        // Get step details
+        const step = await FrameworkStep.findById(stepId);
+        
+        // Check if all steps are complete
+        const allSteps = await FrameworkStep.getUserProgress(userId);
+        const completedSteps = allSteps.filter(s => s.completed || s.isComplete).length;
+        const allStepsComplete = completedSteps >= 6;
+        
+        await emailAutomationService.triggerFrameworkStep(userId, {
+          stepNumber: step.stepNumber || parseInt(stepId),
+          stepTitle: step.title || `Step ${stepId}`,
+          isComplete: true,
+          allStepsComplete: allStepsComplete
+        });
+        
+        logger.info('Framework step completion email triggered', { 
+          userId, 
+          stepId, 
+          stepNumber: step.stepNumber,
+          allStepsComplete 
+        });
+      } catch (emailError) {
+        logger.error('Failed to trigger framework step email', emailError.message);
+      }
+    }
+    
     res.json({ success: true, data: progress });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

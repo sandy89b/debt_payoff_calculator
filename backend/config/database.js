@@ -76,6 +76,40 @@ const initializeDatabase = async () => {
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'password_hash' AND is_nullable = 'NO') THEN
           ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
         END IF;
+        
+        -- Add phone column if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'phone') THEN
+          ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+        END IF;
+        
+        -- Add phone_verified column if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'phone_verified') THEN
+          ALTER TABLE users ADD COLUMN phone_verified BOOLEAN DEFAULT FALSE;
+        END IF;
+        
+        -- Add phone_verification_code column if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'phone_verification_code') THEN
+          ALTER TABLE users ADD COLUMN phone_verification_code VARCHAR(6);
+        END IF;
+        
+        -- Add phone_verification_expires column if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'phone_verification_expires') THEN
+          ALTER TABLE users ADD COLUMN phone_verification_expires TIMESTAMP;
+        END IF;
+        
+        -- Add role column if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'role') THEN
+          ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user';
+        END IF;
+        
+        -- Add password reset columns if they don't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'password_reset_token') THEN
+          ALTER TABLE users ADD COLUMN password_reset_token VARCHAR(255);
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'password_reset_expires') THEN
+          ALTER TABLE users ADD COLUMN password_reset_expires TIMESTAMP;
+        END IF;
       END $$;
     `;
 
@@ -89,9 +123,24 @@ const initializeDatabase = async () => {
     const createGoogleIdIndex = `
       CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
     `;
+    
+    const createPhoneIndex = `
+      CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+    `;
+    
+    const createPhoneVerificationIndex = `
+      CREATE INDEX IF NOT EXISTS idx_users_phone_verification_code ON users(phone_verification_code);
+    `;
+    
+    const createPasswordResetIndex = `
+      CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token);
+    `;
 
     await pool.query(createEmailIndex);
     await pool.query(createGoogleIdIndex);
+    await pool.query(createPhoneIndex);
+    await pool.query(createPhoneVerificationIndex);
+    await pool.query(createPasswordResetIndex);
     
     console.log('✅ Database tables initialized successfully');
   } catch (error) {

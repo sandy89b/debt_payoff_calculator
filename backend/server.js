@@ -7,12 +7,20 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config({ path: './config.env' });
 
 const { initializeDatabase } = require('./config/database');
+const scheduledEmailService = require('./services/scheduledEmailService');
+const debtBalanceMonitor = require('./services/debtBalanceMonitor');
+const logger = require('./utils/logger');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const googleAuthRoutes = require('./routes/googleAuthRoutes');
 const pourPayoffRoutes = require('./routes/pourPayoffRoutes');
+const enhancedDebtRoutes = require('./routes/enhancedDebtRoutes');
+const debtPaymentRoutes = require('./routes/debtPaymentRoutes');
+const adminDebtRoutes = require('./routes/adminDebtRoutes');
 const emailAutomationRoutes = require('./routes/emailAutomationRoutes');
+const trackingRoutes = require('./routes/trackingRoutes');
+const scheduledEmailRoutes = require('./routes/scheduledEmailRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -66,7 +74,12 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/google', googleAuthRoutes);
 app.use('/api/pour-payoff', pourPayoffRoutes);
+app.use('/api/debts', enhancedDebtRoutes);
+app.use('/api/debt-payments', debtPaymentRoutes);
+app.use('/api/admin/debts', adminDebtRoutes);
 app.use('/api/email-automation', emailAutomationRoutes);
+app.use('/api/tracking', trackingRoutes);
+app.use('/api/scheduled-emails', scheduledEmailRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -94,10 +107,28 @@ const startServer = async () => {
     await initializeDatabase();
     console.log('✅ Database tables initialized successfully');
     
+    // Initialize and start scheduled email services
+    scheduledEmailService.init();
+    scheduledEmailService.start();
+    console.log('✅ Scheduled email services started');
+    
+    // Initialize and start debt balance monitor
+    if (process.env.DEBT_MONITOR_ENABLED === 'true') {
+      debtBalanceMonitor.start();
+      console.log('✅ Debt balance monitor started');
+    }
+    
     // Start listening
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`💾 Database: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
+      console.log(`📧 Email automation: Active`);
+      
+      // Log scheduled job status
+      const jobStatus = scheduledEmailService.getStatus();
+      jobStatus.forEach(job => {
+        console.log(`  📅 ${job.name}: ${job.running ? 'Running' : 'Stopped'}`);
+      });
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

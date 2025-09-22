@@ -1,7 +1,11 @@
 const express = require('express');
 const EmailAutomationController = require('../controllers/emailAutomationController');
+const { verifyAdmin } = require('../middleware/adminAuth');
 
 const router = express.Router();
+
+// Apply admin authentication to all routes
+router.use(verifyAdmin);
 
 // Email Templates
 router.get('/templates', EmailAutomationController.getTemplates);

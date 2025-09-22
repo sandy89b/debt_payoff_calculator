@@ -176,7 +176,8 @@ class GoogleAuthController {
       res.json({
         success: true,
         data: {
-          user: user.toJSON()
+          user: user.toJSON(),
+          token: token
         }
       });
 

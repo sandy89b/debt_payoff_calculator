@@ -1,6 +1,7 @@
 const sgMail = require('@sendgrid/mail');
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
+const smsService = require('./smsService');
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -534,7 +535,7 @@ class EmailAutomationService {
   async getUserData(userId) {
     try {
       const query = `
-        SELECT id, first_name, last_name, email, created_at
+        SELECT id, first_name, last_name, email, phone, created_at
         FROM users 
         WHERE id = $1
       `;
@@ -548,6 +549,28 @@ class EmailAutomationService {
     } catch (error) {
       logger.error('Error getting user data', error.message);
       throw error;
+    }
+  }
+
+  // Generate tracking pixel HTML
+  generateTrackingPixel(emailSendId) {
+    const trackingId = `${emailSendId}-${Date.now()}`;
+    const trackingUrl = `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/tracking/open/${trackingId}`;
+    
+    return `<img src="${trackingUrl}" width="1" height="1" border="0" style="display:none !important; visibility:hidden !important; opacity:0 !important;" alt="" />`;
+  }
+
+  // Add tracking pixel to HTML content
+  addTrackingPixel(htmlContent, emailSendId) {
+    if (!htmlContent || !emailSendId) return htmlContent;
+    
+    const trackingPixel = this.generateTrackingPixel(emailSendId);
+    
+    // Try to add before closing body tag, otherwise at the end
+    if (htmlContent.includes('</body>')) {
+      return htmlContent.replace('</body>', `${trackingPixel}</body>`);
+    } else {
+      return `${htmlContent}${trackingPixel}`;
     }
   }
 
@@ -567,7 +590,22 @@ class EmailAutomationService {
         userId, campaignId, templateId, recipientEmail, subject, htmlContent, textContent
       ]);
       
-      return result.rows[0].id;
+      const emailSendId = result.rows[0].id;
+      
+      // Add tracking pixel to HTML content and update the record
+      if (htmlContent) {
+        const htmlWithTracking = this.addTrackingPixel(htmlContent, emailSendId);
+        
+        const updateQuery = `
+          UPDATE email_sends 
+          SET html_content = $1 
+          WHERE id = $2
+        `;
+        
+        await pool.query(updateQuery, [htmlWithTracking, emailSendId]);
+      }
+      
+      return emailSendId;
     } catch (error) {
       logger.error('Error recording email send', error.message);
       // Don't throw error - we don't want to fail email sending if recording fails
@@ -595,15 +633,15 @@ class EmailAutomationService {
       let query = `
         SELECT 
           COUNT(*) as total_sends,
-          COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent_count,
+          COUNT(CASE WHEN status IN ('sent', 'opened', 'clicked') THEN 1 END) as sent_count,
           COUNT(CASE WHEN status = 'delivered' THEN 1 END) as delivered_count,
-          COUNT(CASE WHEN status = 'opened' THEN 1 END) as opened_count,
+          COUNT(CASE WHEN first_opened_at IS NOT NULL THEN 1 END) as opened_count,
           COUNT(CASE WHEN status = 'clicked' THEN 1 END) as clicked_count,
           COUNT(CASE WHEN status = 'bounced' THEN 1 END) as bounced_count,
-          AVG(open_count) as avg_opens,
-          AVG(click_count) as avg_clicks
+          AVG(COALESCE(open_count, 0)) as avg_opens,
+          AVG(COALESCE(click_count, 0)) as avg_clicks
         FROM email_sends
-        WHERE created_at >= CURRENT_DATE - INTERVAL '${dateRange} days'
+        WHERE sent_at >= CURRENT_DATE - INTERVAL '${dateRange} days'
       `;
       
       const params = [];
@@ -725,6 +763,387 @@ class EmailAutomationService {
     } catch (error) {
       logger.error('Error creating default templates', error.message);
       throw error;
+    }
+  }
+
+  // ==================== MILESTONE EMAIL TRIGGERS ====================
+
+  // Trigger debt progress milestone emails
+  async triggerDebtMilestone(userId, milestoneData) {
+    const { milestoneType, debtName, amount, percentage, totalDebt, remainingDebt } = milestoneData;
+    
+    let triggerEvent = '';
+    let eventData = {
+      debtName: debtName || 'your debt',
+      amount: this.formatCurrency(amount || 0),
+      percentage: percentage || 0,
+      totalDebt: this.formatCurrency(totalDebt || 0),
+      remainingDebt: this.formatCurrency(remainingDebt || 0),
+      celebrationLevel: this.getCelebrationLevel(percentage || 0)
+    };
+
+    switch (milestoneType) {
+      case 'first_debt_paid':
+        triggerEvent = 'first_debt_paid';
+        eventData.encouragementMessage = "You've proven you can do this! Keep the momentum going.";
+        break;
+      case 'debt_milestone_25':
+        triggerEvent = 'debt_milestone_25';
+        eventData.encouragementMessage = "You're 1/4 of the way to freedom! Amazing progress.";
+        break;
+      case 'debt_milestone_50':
+        triggerEvent = 'debt_milestone_50';
+        eventData.encouragementMessage = "Halfway there! You're unstoppable now.";
+        break;
+      case 'debt_milestone_75':
+        triggerEvent = 'debt_milestone_75';
+        eventData.encouragementMessage = "So close to freedom! The finish line is in sight.";
+        break;
+      case 'debt_free':
+        triggerEvent = 'debt_free';
+        eventData.encouragementMessage = "DEBT FREE! You did it! Time to build your legacy.";
+        break;
+      default:
+        logger.warn(`Unknown debt milestone type: ${milestoneType}`);
+        return;
+    }
+
+    // Send email campaign
+    await this.triggerCampaignByEvent(triggerEvent, userId, eventData);
+    
+    // Also send SMS notification if user has phone number and SMS is enabled
+    await this.sendDebtMilestoneSMS(userId, milestoneType, debtName, percentage);
+  }
+
+  // Trigger framework step completion emails
+  async triggerFrameworkStep(userId, stepData) {
+    const { stepNumber, stepTitle, isComplete, allStepsComplete } = stepData;
+    
+    if (allStepsComplete) {
+      await this.triggerCampaignByEvent('framework_complete', userId, {
+        achievement: 'All 6 Framework Steps Complete',
+        nextPhase: 'Legacy Building',
+        completionBonus: 'You\'ve mastered the Widow\'s Wealth Cycle!'
+      });
+    } else if (isComplete) {
+      const nextStep = stepNumber < 6 ? stepNumber + 1 : null;
+      await this.triggerCampaignByEvent('framework_step_complete', userId, {
+        stepNumber,
+        stepTitle,
+        nextStepNumber: nextStep,
+        nextStepTitle: this.getFrameworkStepTitle(nextStep),
+        progressPercentage: Math.round((stepNumber / 6) * 100)
+      });
+    }
+  }
+
+  // ==================== ENGAGEMENT EMAIL TRIGGERS ====================
+
+  // Trigger first debt entry welcome
+  async triggerFirstDebtEntry(userId, debtData) {
+    const { debtCount, totalDebt } = debtData;
+    
+    await this.triggerCampaignByEvent('first_debt_entry', userId, {
+      debtCount,
+      totalDebt: this.formatCurrency(totalDebt),
+      encouragement: debtCount === 1 ? 
+        "Every journey begins with a single step. You've taken yours!" :
+        `You've listed ${debtCount} debts. Awareness is the first step to freedom!`,
+      nextStep: 'Use our calculator to create your payoff strategy'
+    });
+  }
+
+  // Trigger calculator usage follow-up
+  async triggerCalculatorUsed(userId, calculatorData) {
+    const { strategy, monthsToPayoff, totalInterest, extraPayment } = calculatorData;
+    
+    await this.triggerCampaignByEvent('calculator_used', userId, {
+      strategy: strategy || 'Debt Snowball',
+      monthsToPayoff: monthsToPayoff || 'N/A',
+      totalInterest: this.formatCurrency(totalInterest || 0),
+      extraPayment: this.formatCurrency(extraPayment || 0),
+      savings: totalInterest > 0 ? `You could save ${this.formatCurrency(totalInterest)} in interest!` : '',
+      actionItem: 'Export your plan to PDF and start your debt-free journey!'
+    });
+  }
+
+  // Trigger user inactivity emails
+  async triggerUserInactivity(userId, inactivityData) {
+    const { daysSinceLastLogin, lastActivity } = inactivityData;
+    
+    if (daysSinceLastLogin >= 30) {
+      await this.triggerCampaignByEvent('user_inactive_30_days', userId, {
+        daysSinceLastLogin,
+        lastActivity,
+        winBackOffer: 'Special: Free 30-minute debt strategy consultation',
+        motivationalQuote: '"The best time to plant a tree was 20 years ago. The second best time is now." - Chinese Proverb'
+      });
+    } else if (daysSinceLastLogin >= 7) {
+      await this.triggerCampaignByEvent('user_inactive_7_days', userId, {
+        daysSinceLastLogin,
+        lastActivity,
+        encouragement: 'Your debt freedom journey is waiting for you!',
+        quickWin: 'Just 5 minutes today can restart your momentum'
+      });
+    }
+  }
+
+  // ==================== BEHAVIORAL EMAIL TRIGGERS ====================
+
+  // Trigger goal creation confirmation
+  async triggerGoalCreated(userId, goalData) {
+    const { goalType, goalAmount, targetDate, goalName } = goalData;
+    
+    await this.triggerCampaignByEvent('goal_created', userId, {
+      goalType,
+      goalName,
+      goalAmount: this.formatCurrency(goalAmount),
+      targetDate: this.formatDate(targetDate),
+      encouragement: 'Goals are dreams with deadlines. You\'ve just made yours real!',
+      trackingTip: 'Check your progress weekly to stay motivated'
+    });
+  }
+
+  // Trigger PDF export follow-up
+  async triggerPdfExported(userId, exportData) {
+    const { exportType, fileName } = exportData;
+    
+    await this.triggerCampaignByEvent('pdf_exported', userId, {
+      exportType,
+      fileName,
+      nextStep: exportType === 'debt_plan' ? 
+        'Share your plan with your accountability partner' :
+        'Review your plan weekly and celebrate small wins',
+      additionalResource: 'Download our free debt tracking worksheet'
+    });
+  }
+
+  // ==================== SCHEDULED EMAIL CAMPAIGNS ====================
+
+  // Trigger weekly check-in emails
+  async triggerWeeklyCheckIn(userId, progressData) {
+    const { weeklyProgress, totalProgress, motivationalMessage } = progressData;
+    
+    await this.triggerCampaignByEvent('weekly_check_in', userId, {
+      weeklyProgress: weeklyProgress || 'Keep going!',
+      totalProgress: totalProgress || 'Every step counts',
+      motivationalMessage: motivationalMessage || 'You\'re doing great!',
+      weeklyTip: this.getWeeklyTip(),
+      biblicalVerse: this.getWeeklyVerse()
+    });
+  }
+
+  // Trigger monthly progress report
+  async triggerMonthlyReport(userId, monthlyData) {
+    const { debtPaid, interestSaved, milestonesReached, frameworkProgress } = monthlyData;
+    
+    await this.triggerCampaignByEvent('monthly_report', userId, {
+      debtPaid: this.formatCurrency(debtPaid || 0),
+      interestSaved: this.formatCurrency(interestSaved || 0),
+      milestonesReached: milestonesReached || 0,
+      frameworkProgress: `${frameworkProgress || 0}% complete`,
+      monthlyHighlight: this.getMonthlyHighlight(monthlyData),
+      nextMonthGoal: 'Continue building momentum!'
+    });
+  }
+
+  // ==================== UTILITY METHODS ====================
+
+  formatCurrency(amount) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
+  }
+
+  formatDate(date) {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  getCelebrationLevel(percentage) {
+    if (percentage >= 75) return 'AMAZING';
+    if (percentage >= 50) return 'FANTASTIC';
+    if (percentage >= 25) return 'GREAT';
+    return 'GOOD';
+  }
+
+  getFrameworkStepTitle(stepNumber) {
+    const steps = {
+      1: 'INVENTORY - What\'s In Your House?',
+      2: 'INSTRUCTION - Borrow With Purpose',
+      3: 'IMPLEMENTATION - Shut the Door and Pour',
+      4: 'INCREASE - Let It Flow Until It Stops',
+      5: 'INCOME - Sell the Oil',
+      6: 'IMPACT - Pay Your Debts and Live'
+    };
+    return steps[stepNumber] || 'Complete';
+  }
+
+  getWeeklyTip() {
+    const tips = [
+      'Review your budget every Sunday to stay on track',
+      'Celebrate small wins - they add up to big victories',
+      'Find an accountability partner for your debt journey',
+      'Use the envelope method for discretionary spending',
+      'Automate your debt payments to avoid temptation'
+    ];
+    return tips[Math.floor(Math.random() * tips.length)];
+  }
+
+  getWeeklyVerse() {
+    const verses = [
+      '"The plans of the diligent lead to profit as surely as haste leads to poverty." - Proverbs 21:5',
+      '"She considers a field and buys it; out of her earnings she plants a vineyard." - Proverbs 31:16',
+      '"Commit to the Lord whatever you do, and he will establish your plans." - Proverbs 16:3',
+      '"The blessing of the Lord brings wealth, without painful toil for it." - Proverbs 10:22'
+    ];
+    return verses[Math.floor(Math.random() * verses.length)];
+  }
+
+  getMonthlyHighlight(data) {
+    if (data.debtPaid > 1000) return `Outstanding! You paid off ${this.formatCurrency(data.debtPaid)} this month!`;
+    if (data.milestonesReached > 0) return `You reached ${data.milestonesReached} milestone(s) this month!`;
+    if (data.frameworkProgress > 0) return `Great progress on the framework - ${data.frameworkProgress}% complete!`;
+    return 'Keep building momentum - every step forward counts!';
+  }
+
+  // ==================== SMS NOTIFICATION METHODS ====================
+
+  // Send SMS notification for debt milestones
+  async sendDebtMilestoneSMS(userId, milestoneType, debtName, percentage) {
+    try {
+      // Get user data including phone number
+      const userData = await this.getUserData(userId);
+      if (!userData || !userData.phone) {
+        logger.info(`No phone number for user ${userId}, skipping SMS notification`);
+        return;
+      }
+
+      // Check if SMS service is enabled
+      const smsStatus = smsService.getStatus();
+      if (!smsStatus.isEnabled) {
+        logger.info('SMS service not enabled, skipping SMS notification');
+        return;
+      }
+
+      // Send SMS via SMS service
+      const result = await smsService.sendDebtMilestoneSMS(
+        userData.phone, 
+        debtName, 
+        milestoneType, 
+        percentage
+      );
+
+      if (result.success) {
+        logger.info('Debt milestone SMS sent successfully', {
+          userId,
+          phone: userData.phone,
+          milestoneType,
+          messageId: result.messageId
+        });
+      } else {
+        logger.error('Failed to send debt milestone SMS', {
+          userId,
+          phone: userData.phone,
+          error: result.error
+        });
+      }
+
+      return result;
+
+    } catch (error) {
+      logger.error('Error sending debt milestone SMS', {
+        userId,
+        milestoneType,
+        error: error.message
+      });
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Send SMS notification for debt payoff reminders
+  async sendDebtPayoffReminderSMS(userId, debtName, amount) {
+    try {
+      const userData = await this.getUserData(userId);
+      if (!userData || !userData.phone) {
+        logger.info(`No phone number for user ${userId}, skipping payoff reminder SMS`);
+        return;
+      }
+
+      const smsStatus = smsService.getStatus();
+      if (!smsStatus.isEnabled) {
+        logger.info('SMS service not enabled, skipping payoff reminder SMS');
+        return;
+      }
+
+      const result = await smsService.sendDebtPayoffReminder(
+        userData.phone,
+        debtName,
+        this.formatCurrency(amount)
+      );
+
+      if (result.success) {
+        logger.info('Debt payoff reminder SMS sent successfully', {
+          userId,
+          phone: userData.phone,
+          debtName,
+          messageId: result.messageId
+        });
+      }
+
+      return result;
+
+    } catch (error) {
+      logger.error('Error sending debt payoff reminder SMS', {
+        userId,
+        debtName,
+        error: error.message
+      });
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Send motivational SMS
+  async sendMotivationalSMS(userId) {
+    try {
+      const userData = await this.getUserData(userId);
+      if (!userData || !userData.phone) {
+        logger.info(`No phone number for user ${userId}, skipping motivational SMS`);
+        return;
+      }
+
+      const smsStatus = smsService.getStatus();
+      if (!smsStatus.isEnabled) {
+        logger.info('SMS service not enabled, skipping motivational SMS');
+        return;
+      }
+
+      const result = await smsService.sendMotivationalSMS(
+        userData.phone,
+        userData.name || userData.email.split('@')[0]
+      );
+
+      if (result.success) {
+        logger.info('Motivational SMS sent successfully', {
+          userId,
+          phone: userData.phone,
+          messageId: result.messageId
+        });
+      }
+
+      return result;
+
+    } catch (error) {
+      logger.error('Error sending motivational SMS', {
+        userId,
+        error: error.message
+      });
+      return { success: false, error: error.message };
     }
   }
 }

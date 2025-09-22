@@ -4,6 +4,7 @@ const sgMail = require('@sendgrid/mail');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 const emailAutomationService = require('../services/emailAutomationService');
+const smsService = require('../services/smsService');
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -101,23 +102,98 @@ async function sendPasswordResetEmail(to, resetUrl) {
   }
 }
 
+async function sendVerificationSMS(to, code) {
+  try {
+    const message = `Your Legacy Mindset Solutions verification code is: ${code}. This code will expire in 15 minutes.`;
+    const result = await smsService.sendSMS(to, message);
+    
+    if (result.success) {
+      logger.info('Verification SMS sent successfully', { to });
+      return true;
+    } else {
+      logger.error('Failed to send verification SMS', { to, error: result.error });
+      if (process.env.NODE_ENV === 'development') {
+        logger.devInfo(`Verification code for ${to}: ${code}`);
+        return true;
+      }
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    logger.error('Error sending verification SMS', { to, error: error.message });
+    
+    if (process.env.NODE_ENV === 'development') {
+      logger.devInfo(`Verification code for ${to}: ${code}`);
+      return true;
+    }
+    throw error;
+  }
+}
+
+async function sendPasswordResetSMS(to, resetCode) {
+  try {
+    const message = `Your Legacy Mindset Solutions password reset code is: ${resetCode}. This code will expire in 15 minutes. If you didn't request this, please ignore this message.`;
+    const result = await smsService.sendSMS(to, message);
+    
+    if (result.success) {
+      logger.info('Password reset SMS sent successfully', { to });
+      return true;
+    } else {
+      logger.error('Failed to send password reset SMS', { to, error: result.error });
+      if (process.env.NODE_ENV === 'development') {
+        logger.devInfo(`Password reset code for ${to}: ${resetCode}`);
+        return true;
+      }
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    logger.error('Error sending password reset SMS', { to, error: error.message });
+    
+    if (process.env.NODE_ENV === 'development') {
+      logger.devInfo(`Password reset code for ${to}: ${resetCode}`);
+      return true;
+    }
+    throw error;
+  }
+}
+
 class AuthController {
   static async signup(req, res) {
     try {
-      const { firstName, lastName, email, password } = req.validatedData;
+      const { firstName, lastName, email, phone, password } = req.validatedData;
 
-      const existingUser = await User.findByEmail(email);
-      if (existingUser) {
+      // Check if email exists
+      const existingEmailUser = await User.findByEmail(email);
+      if (existingEmailUser) {
         return res.status(409).json({
           success: false,
-          message: 'User with this email already exists'
+          message: 'User with this email already exists',
+          errors: [{
+            field: 'email',
+            message: 'This email address is already registered. Please use a different email or try signing in instead.'
+          }]
         });
+      }
+
+      // Check if phone exists (if phone is provided)
+      if (phone) {
+        const existingPhoneUser = await User.findByPhone(phone);
+        if (existingPhoneUser) {
+          return res.status(409).json({
+            success: false,
+            message: 'User with this phone number already exists',
+            errors: [{
+              field: 'phone',
+              message: 'This phone number is already registered. Please use a different phone number or try signing in instead.'
+            }]
+          });
+        }
       }
 
       const user = await User.create({
         firstName,
         lastName,
         email,
+        phone,
         password
       });
 
@@ -143,7 +219,11 @@ class AuthController {
       if (error.message === 'Email already exists') {
         return res.status(409).json({
           success: false,
-          message: 'User with this email already exists'
+          message: 'Email address is already registered',
+          errors: [{
+            field: 'email',
+            message: 'This email address is already registered. Please use a different email or try signing in instead.'
+          }]
         });
       }
 
@@ -156,13 +236,18 @@ class AuthController {
 
   static async signin(req, res) {
     try {
-      const { email, password } = req.validatedData;
+      const { emailOrPhone, password } = req.validatedData;
 
-      const user = await User.findByEmail(email);
+      // Try to find user by email or phone
+      const user = await User.findByEmailOrPhone(emailOrPhone);
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid email or password'
+          message: 'Invalid credentials',
+          errors: [{
+            field: 'emailOrPhone',
+            message: 'No account found with this email or phone number. Please check your credentials or sign up for a new account.'
+          }]
         });
       }
 
@@ -170,19 +255,38 @@ class AuthController {
       if (!isValidPassword) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid email or password'
+          message: 'Invalid credentials',
+          errors: [{
+            field: 'password',
+            message: 'Incorrect password. Please check your password and try again.'
+          }]
         });
       }
 
-      logger.authSuccess('signin', email);
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          userId: user.id, 
+          email: user.email,
+          phone: user.phone,
+          provider: user.provider
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      );
+
+      logger.authSuccess('signin', emailOrPhone);
       res.json({
         success: true,
         message: 'Sign in successful',
-        data: { user: user.toJSON() }
+        data: { 
+          user: user.toJSON(),
+          token: token
+        }
       });
 
     } catch (error) {
-      logger.authError('signin', req.validatedData?.email, error);
+      logger.authError('signin', req.validatedData?.emailOrPhone, error);
       res.status(500).json({
         success: false,
         message: 'Internal server error'
@@ -270,12 +374,26 @@ class AuthController {
         logger.error('Failed to trigger welcome email automation after verification', emailError.message);
       }
       
+      // Generate JWT token for the verified user
+      const token = jwt.sign(
+        { 
+          userId: user.id, 
+          email: user.email,
+          role: user.role || 'user'
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
       logger.authSuccess('email verification', email);
       
       return res.json({ 
         success: true, 
         message: 'Email verified', 
-        data: { user: user.toJSON() } 
+        data: { 
+          user: user.toJSON(),
+          token: token
+        } 
       });
     } catch (error) {
       logger.authError('email verification', req.body?.email, error);
@@ -437,6 +555,244 @@ class AuthController {
 
     } catch (error) {
       logger.authError('password reset', 'token-based', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  }
+
+  // Send phone verification code
+  static async sendPhoneCode(req, res) {
+    try {
+      const { phone } = req.body;
+      
+      if (!phone) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Phone number is required' 
+        });
+      }
+
+      // Validate phone format
+      if (!smsService.isValidPhoneNumber(phone)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid phone number format',
+          errors: [{
+            field: 'phone',
+            message: 'Please provide a valid phone number (e.g., +1234567890 or (123) 456-7890)'
+          }]
+        });
+      }
+
+      const user = await User.findByPhone(phone);
+      if (!user) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'No account found with this phone number' 
+        });
+      }
+
+      const code = generateVerificationCode();
+      await User.updatePhoneVerificationCode(user.id, code);
+
+      await sendVerificationSMS(phone, code);
+
+      logger.info('Phone verification code sent', { phone, userId: user.id });
+      res.json({
+        success: true,
+        message: 'Verification code sent to your phone number.'
+      });
+
+    } catch (error) {
+      logger.authError('send phone code', req.body?.phone, error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  }
+
+  // Verify phone verification code
+  static async verifyPhoneCode(req, res) {
+    try {
+      const { phone, code } = req.body;
+      
+      if (!phone || !code) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Phone number and code are required' 
+        });
+      }
+
+      const query = `SELECT id, phone_verification_code, phone_verification_expires FROM users WHERE phone = $1`;
+      const result = await pool.query(query, [phone]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'User not found' 
+        });
+      }
+
+      const row = result.rows[0];
+      
+      if (!row.phone_verification_code || !row.phone_verification_expires) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'No active verification code' 
+        });
+      }
+
+      if (new Date(row.phone_verification_expires) < new Date()) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Verification code expired' 
+        });
+      }
+
+      if (row.phone_verification_code !== code) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid verification code' 
+        });
+      }
+
+      await pool.query(
+        `UPDATE users SET phone_verified = true, phone_verification_code = NULL, phone_verification_expires = NULL WHERE id = $1`,
+        [row.id]
+      );
+
+      const user = await User.findById(row.id);
+      
+      // Generate JWT token for the verified user
+      const token = jwt.sign(
+        { 
+          userId: user.id, 
+          email: user.email,
+          role: user.role || 'user'
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      
+      logger.authSuccess('phone verification', phone);
+      
+      return res.json({ 
+        success: true, 
+        message: 'Phone number verified successfully', 
+        data: { 
+          user: user.toJSON(),
+          token: token
+        } 
+      });
+    } catch (error) {
+      logger.authError('phone verification', req.body?.phone, error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Internal server error' 
+      });
+    }
+  }
+
+  // Send phone-based password reset code
+  static async forgotPasswordPhone(req, res) {
+    try {
+      const { phone } = req.body;
+      
+      if (!phone) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Phone number is required' 
+        });
+      }
+
+      const user = await User.findByPhone(phone);
+      if (!user) {
+        return res.json({ 
+          success: true, 
+          message: 'If an account with that phone number exists, we sent a password reset code.' 
+        });
+      }
+
+      const resetCode = generateVerificationCode();
+      await pool.query(
+        `UPDATE users SET password_reset_token = $1, password_reset_expires = NOW() + INTERVAL '15 minutes' WHERE id = $2`,
+        [resetCode, user.id]
+      );
+
+      await sendPasswordResetSMS(phone, resetCode);
+
+      logger.info('Phone-based password reset requested', { phone });
+      res.json({
+        success: true,
+        message: 'Password reset code sent to your phone number.'
+      });
+
+    } catch (error) {
+      logger.authError('forgot password phone', req.body?.phone, error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  }
+
+  // Reset password using phone-based code
+  static async resetPasswordPhone(req, res) {
+    try {
+      const { phone, code, newPassword } = req.body;
+      
+      if (!phone || !code || !newPassword) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Phone number, code, and new password are required' 
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Password must be at least 6 characters long' 
+        });
+      }
+
+      const query = `SELECT id, password_reset_expires FROM users WHERE phone = $1 AND password_reset_token = $2`;
+      const result = await pool.query(query, [phone, code]);
+      
+      if (result.rows.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid or expired reset code' 
+        });
+      }
+
+      const row = result.rows[0];
+      if (!row.password_reset_expires || new Date(row.password_reset_expires) < new Date()) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Reset code has expired' 
+        });
+      }
+
+      const bcrypt = require('bcryptjs');
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+
+      await pool.query(
+        `UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_expires = NULL WHERE id = $2`,
+        [passwordHash, row.id]
+      );
+
+      logger.authSuccess('phone password reset', phone);
+      res.json({
+        success: true,
+        message: 'Password reset successfully. You can now sign in with your new password.'
+      });
+
+    } catch (error) {
+      logger.authError('phone password reset', req.body?.phone, error);
       res.status(500).json({
         success: false,
         message: 'Internal server error'
