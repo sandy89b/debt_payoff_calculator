@@ -186,7 +186,7 @@ const EmailCampaignManager: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-900">Email Campaigns</h2>
         <button
           onClick={() => handleOpenModal()}
-          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           Create Campaign
         </button>
@@ -242,7 +242,7 @@ const EmailCampaignManager: React.FC = () => {
                 <td className="px-3 py-4 whitespace-nowrap">
                   <span className={`px-1.5 inline-flex text-xs leading-4 font-semibold rounded ${
                     campaign.is_active 
-                      ? 'bg-green-100 text-green-800' 
+                      ? 'bg-purple-100 text-purple-800' 
                       : 'bg-red-100 text-red-800'
                   }`}>
                     {campaign.is_active ? 'Active' : 'Inactive'}
@@ -257,7 +257,7 @@ const EmailCampaignManager: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleTestEmail(campaign.id)}
-                    className="text-green-600 hover:text-green-900 mr-3"
+                    className="text-purple-600 hover:text-purple-900 mr-3"
                   >
                     Test
                   </button>
@@ -283,7 +283,7 @@ const EmailCampaignManager: React.FC = () => {
               </div>
               <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                 campaign.is_active 
-                  ? 'bg-green-100 text-green-800' 
+                  ? 'bg-purple-100 text-purple-800' 
                   : 'bg-red-100 text-red-800'
               }`}>
                 {campaign.is_active ? 'Active' : 'Inactive'}
@@ -321,7 +321,7 @@ const EmailCampaignManager: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleTestEmail(campaign.id)}
-                  className="flex-1 bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors"
+                  className="flex-1 bg-purple-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
                 >
                   Test
                 </button>
@@ -348,7 +348,7 @@ const EmailCampaignManager: React.FC = () => {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
                       required
                     />
                   </div>

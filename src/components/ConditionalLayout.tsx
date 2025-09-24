@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Header } from '@/components/Header';
+import { PageTransition } from '@/components/PageTransition';
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -18,7 +19,11 @@ export const ConditionalLayout: React.FC<ConditionalLayoutProps> = ({ children }
     // Render auth layout without sidebar
     return (
       <div className="min-h-screen">
-        {children}
+        <PageTransition>
+          <div className="page-content">
+            {children}
+          </div>
+        </PageTransition>
       </div>
     );
   }
@@ -32,7 +37,11 @@ export const ConditionalLayout: React.FC<ConditionalLayoutProps> = ({ children }
           <Header />
           <main className="flex-1 px-4 py-6 md:px-6">
             <div className="mx-auto w-full max-w-7xl">
-              {children}
+              <PageTransition>
+                <div className="page-content">
+                  {children}
+                </div>
+              </PageTransition>
             </div>
           </main>
         </SidebarInset>

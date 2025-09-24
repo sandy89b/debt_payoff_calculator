@@ -28,10 +28,10 @@ export default {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
-				// Legacy Mindset brand colors
-				'brand-green': 'hsl(var(--brand-green))',
-				'brand-green-light': 'hsl(var(--brand-green-light))',
-				'brand-green-dark': 'hsl(var(--brand-green-dark))',
+				// Legacy Mindset brand colors - Updated to Purple
+				'brand-purple': 'hsl(var(--brand-green))', // Primary purple
+				'brand-purple-light': 'hsl(var(--brand-green-light))', // Light purple
+				'brand-purple-dark': 'hsl(var(--brand-green-dark))', // Dark purple
 				'brand-charcoal': 'hsl(var(--brand-charcoal))',
 				'brand-gray': 'hsl(var(--brand-gray))',
 				secondary: {

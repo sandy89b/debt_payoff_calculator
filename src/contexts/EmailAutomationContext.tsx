@@ -119,6 +119,27 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('auth_token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+  };
+
+  // Helper function to make authenticated API requests
+  const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...getAuthHeaders(),
+        ...options.headers
+      }
+    });
+    return response;
+  };
+
   const handleError = (error: any, operation: string) => {
     const errorMessage = error.response?.data?.message || error.message || `Failed to ${operation}`;
     setError(errorMessage);
@@ -130,7 +151,7 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
   const getTemplates = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/templates`);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/templates`);
       const data = await response.json();
       
       if (data.success) {
@@ -153,7 +174,7 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
 
   const getTemplate = async (id: number): Promise<EmailTemplate | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/templates/${id}`);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/templates/${id}`);
       const data = await response.json();
       
       if (data.success) {
@@ -170,11 +191,8 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
   const createTemplate = async (template: Partial<EmailTemplate>): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/templates`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/templates`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(template),
       });
       
@@ -197,11 +215,8 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
   const updateTemplate = async (id: number, template: Partial<EmailTemplate>): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/templates/${id}`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/templates/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(template),
       });
       
@@ -224,7 +239,7 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
   const deleteTemplate = async (id: number): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/templates/${id}`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/templates/${id}`, {
         method: 'DELETE',
       });
       
@@ -248,7 +263,7 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
   const getCampaigns = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/campaigns`);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/campaigns`);
       const data = await response.json();
       
       if (data.success) {
@@ -265,7 +280,7 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
 
   const getCampaign = async (id: number): Promise<EmailCampaign | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/campaigns/${id}`);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/campaigns/${id}`);
       const data = await response.json();
       
       if (data.success) {
@@ -282,11 +297,8 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
   const createCampaign = async (campaign: Partial<EmailCampaign>): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/campaigns`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/campaigns`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(campaign),
       });
       
@@ -310,11 +322,8 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
     try {
       setLoading(true);
       
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/campaigns/${id}`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/campaigns/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(campaign),
       });
       
@@ -338,11 +347,8 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
   const sendTestEmail = async (campaignId: number, testEmail: string, customVariables?: any): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/send-test`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/send-test`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           campaign_id: campaignId,
           test_email: testEmail,
@@ -372,7 +378,7 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
       if (campaignId) params.append('campaign_id', campaignId.toString());
       params.append('date_range', dateRange.toString());
       
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/analytics?${params}`);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/analytics?${params}`);
       const data = await response.json();
       
       if (data.success) {
@@ -397,7 +403,7 @@ export const EmailAutomationProvider: React.FC<EmailAutomationProviderProps> = (
         }
       });
       
-      const response = await fetch(`${API_BASE_URL}/api/email-automation/sends?${params}`);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/email-automation/sends?${params}`);
       const data = await response.json();
       
       if (data.success) {

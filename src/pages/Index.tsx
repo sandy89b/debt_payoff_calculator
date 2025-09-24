@@ -1,9 +1,22 @@
-import { DebtCalculator } from '@/components/debt-calculator/DebtCalculator';
+import { EnhancedDebtCalculator } from '@/components/debt-calculator/EnhancedDebtCalculator';
+import { GuestDebtCalculator } from '@/components/debt-calculator/GuestDebtCalculator';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
+  
+  // Force guest mode if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <GuestDebtCalculator />
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-background">
-      <DebtCalculator />
+      <EnhancedDebtCalculator />
     </div>
   );
 };

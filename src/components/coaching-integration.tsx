@@ -57,7 +57,7 @@ interface Resource {
   id: string;
   title: string;
   type: "pdf" | "video" | "audio" | "article";
-  category: "biblical-finance" | "debt-management" | "budgeting" | "giving" | "legacy";
+  category: "biblical-finance" | "debt-manage" | "budgeting" | "giving" | "legacy";
   description: string;
   duration?: string;
   downloaded: boolean;
@@ -147,7 +147,7 @@ export function CoachingIntegration() {
       id: "2",
       title: "Debt Freedom Prayer & Action Plan",
       type: "pdf", 
-      category: "debt-management",
+      category: "debt-manage",
       description: "Combining prayer with practical steps for becoming debt-free",
       downloaded: false
     },

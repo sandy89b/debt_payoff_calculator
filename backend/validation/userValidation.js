@@ -37,24 +37,21 @@ const signupSchema = Joi.object({
     }),
   
   phone: Joi.string()
-    .pattern(phoneRegex)
-    .required()
+    .pattern(/^(\+[1-9]\d{1,14}|\d{10,15})$/)
+    .optional()
+    .allow('')
     .messages({
-      'string.pattern.base': 'Please provide a valid international phone number with country code (e.g., +1234567890)',
-      'string.empty': 'Phone number is required',
-      'any.required': 'Phone number is required'
+      'string.pattern.base': 'Please provide a valid phone number (e.g., +1234567890 or 1234567890)',
     }),
   
   password: Joi.string()
-    .min(8)
+    .min(6)
     .max(128)
-    .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]'))
     .required()
     .messages({
       'string.empty': 'Password is required',
-      'string.min': 'Password must be at least 8 characters long',
+      'string.min': 'Password must be at least 6 characters long',
       'string.max': 'Password cannot exceed 128 characters',
-      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
       'any.required': 'Password is required'
     }),
   
@@ -64,7 +61,11 @@ const signupSchema = Joi.object({
     .messages({
       'any.only': 'Passwords do not match',
       'any.required': 'Password confirmation is required'
-    })
+    }),
+  
+  skipVerification: Joi.boolean()
+    .optional()
+    .default(false)
 });
 
 const signinSchema = Joi.object({
@@ -80,6 +81,17 @@ const signinSchema = Joi.object({
     .messages({
       'string.empty': 'Password is required',
       'any.required': 'Password is required'
+    }),
+  twoFactorToken: Joi.string()
+    .optional()
+    .allow('')
+    .custom((value, helpers) => {
+      if (value && value.trim() !== '') {
+        if (value.length !== 6 || !/^[0-9]+$/.test(value)) {
+          return helpers.error('string.pattern.base');
+        }
+      }
+      return value;
     })
 });
 

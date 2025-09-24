@@ -76,7 +76,8 @@ export const PaymentCalendar: React.FC<PaymentCalendarProps> = ({
       }
     });
 
-    return events.concat(events);
+    // Return unique events only; avoid duplicating which causes duplicate keys
+    return events;
   };
 
   const allEvents = [...generatePaymentEvents(), ...events];

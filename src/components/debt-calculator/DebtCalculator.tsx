@@ -167,7 +167,7 @@ export const DebtCalculator: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-brand-green/5">
+    <div className="min-h-screen bg-gradient-to-br from-background to-brand-purple/5">
       <div className="max-w-7xl mx-auto p-3 md:p-6 space-y-6 md:space-y-8">
         {/* Hero Section */}
         <div className="text-center space-y-4 md:space-y-6 py-6 md:py-12">
@@ -422,7 +422,7 @@ export const DebtCalculator: React.FC = () => {
           
           {/* Enhanced Call to Action */}
           <Card className="bg-gradient-hero shadow-glow text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-brand-green/10 backdrop-blur-sm"></div>
+            <div className="absolute inset-0 bg-brand-purple/10 backdrop-blur-sm"></div>
             <CardContent className="relative p-8 md:p-12">
               <div className="max-w-2xl mx-auto">
                 <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -435,7 +435,7 @@ export const DebtCalculator: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button 
                     size="lg" 
-                    className="bg-white text-brand-green hover:bg-white/90 font-semibold px-6 md:px-8 py-3 touch-target"
+                    className="bg-white text-brand-purple hover:bg-white/90 font-semibold px-6 md:px-8 py-3 touch-target"
                     onClick={() => window.open('https://legacymindsetsolutions.com/contact', '_blank')}
                   >
                     Schedule Free Consultation

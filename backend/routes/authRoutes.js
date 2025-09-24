@@ -17,6 +17,9 @@ router.post('/signup', validateSignup, AuthController.signup);
 // @desc    Sign in user
 // @access  Public
 router.post('/signin', validateSignin, AuthController.signin);
+router.post('/verify-2fa', AuthController.verifyTwoFactor);
+// Short-lived password setup link
+router.post('/set-password', AuthController.setPassword);
 
 // @route   GET /api/auth/profile
 // @desc    Get current user profile

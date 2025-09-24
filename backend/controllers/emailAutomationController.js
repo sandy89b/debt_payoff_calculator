@@ -417,6 +417,80 @@ class EmailAutomationController {
     }
   }
 
+  // Send test email for a specific template
+  static async sendTemplateTestEmail(req, res) {
+    try {
+      const { id } = req.params;
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email address is required'
+        });
+      }
+
+      // Get the template
+      const template = await emailAutomationService.getTemplate(id);
+      if (!template) {
+        return res.status(404).json({
+          success: false,
+          message: 'Template not found'
+        });
+      }
+
+      // Check if template has content
+      if (!template.html_content && !template.text_content) {
+        return res.status(400).json({
+          success: false,
+          message: 'Template has no content to send'
+        });
+      }
+
+      // Default test variables
+      const testVariables = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: email,
+        totalDebt: '$25,000',
+        debtCount: '3',
+        totalMinPayments: '$450',
+        extraPayment: '$200',
+        encouragementMessage: 'You\'re taking the right steps toward financial freedom!',
+        platformUrl: process.env.FRONTEND_URL || 'http://localhost:8080',
+        debtName: 'Credit Card',
+        stepTitle: 'Step 1: Inventory',
+        amount: '$5,000'
+      };
+
+      // Process template with test variables
+      const processedTemplate = emailAutomationService.processTemplate(template, testVariables);
+
+      // Send the test email
+      const emailResult = await emailAutomationService.sendEmail(
+        email,
+        processedTemplate.subject,
+        processedTemplate.html_content,
+        processedTemplate.text_content
+      );
+
+      logger.info('Template test email sent', { templateId: id, testEmail: email });
+      
+      res.json({
+        success: true,
+        message: 'Test email sent successfully',
+        data: emailResult
+      });
+    } catch (error) {
+      logger.error('Error sending template test email', error.message);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send test email',
+        error: error.message
+      });
+    }
+  }
+
   // Get email analytics
   static async getAnalytics(req, res) {
     try {

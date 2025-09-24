@@ -1,4 +1,5 @@
 const { pool } = require('../config/database');
+const emailAutomationService = require('../services/emailAutomationService');
 
 class CalendarEvent {
   constructor(data) {
@@ -39,7 +40,22 @@ class CalendarEvent {
         throw new Error('Failed to create calendar event');
       }
       
-      return new CalendarEvent(result.rows[0]);
+      const created = new CalendarEvent(result.rows[0]);
+      
+      // Trigger payment reminder confirmation email when creating reminders
+      try {
+        if (created.eventType === 'reminder') {
+          await emailAutomationService.triggerCampaignByEvent('payment_reminder_set', userId, {
+            title: created.title,
+            dueDate: created.eventDate,
+            method: 'email'
+          });
+        }
+      } catch (e) {
+        // Do not fail creation on email issues
+      }
+      
+      return created;
     } catch (error) {
       throw error;
     }

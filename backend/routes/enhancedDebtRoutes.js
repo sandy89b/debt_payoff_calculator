@@ -443,4 +443,74 @@ router.post('/bulk', async (req, res) => {
   }
 });
 
+// Transfer guest debt data from localStorage to database
+router.post('/transfer-guest-data', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { debts: debtsData } = req.body;
+    
+    if (!Array.isArray(debtsData) || debtsData.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid debts data. Expected array of debt objects.' 
+      });
+    }
+    
+    const createdDebts = [];
+    const errors = [];
+    
+    for (let i = 0; i < debtsData.length; i++) {
+      try {
+        const debtData = debtsData[i];
+        // Map frontend property names to backend property names
+        const backendData = {
+          name: debtData.name,
+          balance: debtData.balance,
+          interestRate: debtData.interestRate,
+          minimumPayment: debtData.minPayment,
+          dueDate: debtData.dueDate,
+          debtType: debtData.debtType,
+          description: debtData.description || ''
+        };
+        
+        const debt = await EnhancedDebt.create(userId, backendData);
+        createdDebts.push(debt.toJSON());
+      } catch (error) {
+        errors.push({
+          index: i,
+          data: debtsData[i],
+          error: error.message
+        });
+      }
+    }
+    
+    logger.info('Guest debt data transferred successfully', { 
+      userId, 
+      transferredCount: createdDebts.length,
+      errorCount: errors.length 
+    });
+    
+    res.status(201).json({ 
+      success: true, 
+      data: {
+        created: createdDebts,
+        errors: errors,
+        summary: {
+          total: debtsData.length,
+          created: createdDebts.length,
+          failed: errors.length
+        }
+      },
+      message: `Successfully transferred ${createdDebts.length} debts${errors.length > 0 ? ` (${errors.length} failed)` : ''}`
+    });
+  } catch (error) {
+    logger.error('Error transferring guest debt data', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to transfer guest debt data',
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;

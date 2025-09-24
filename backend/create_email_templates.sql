@@ -392,3 +392,50 @@ UPDATE email_campaigns SET template_id = (SELECT id FROM email_templates WHERE n
 UPDATE email_campaigns SET template_id = (SELECT id FROM email_templates WHERE name = 'First Debt Entry Welcome' LIMIT 1) WHERE trigger_event = 'first_debt_entry';
 UPDATE email_campaigns SET template_id = (SELECT id FROM email_templates WHERE name = '7-Day Inactivity Re-engagement' LIMIT 1) WHERE trigger_event = 'user_inactive_7_days';
 UPDATE email_campaigns SET template_id = (SELECT id FROM email_templates WHERE name = 'Weekly Check-in' LIMIT 1) WHERE trigger_event = 'weekly_check_in';
+
+-- Emergency Fund templates (idempotent inserts)
+INSERT INTO email_templates (name, subject, html_content, text_content, template_type, category, variables)
+SELECT 'EF $500 Milestone', 'Emergency Fund Milestone: $500 Saved! 🎉',
+  '<p>Great start, {{firstName}}! You''ve saved your first $500 for emergencies.</p><p>Current Fund: {{currentFund}} / Target: {{targetFund}}</p>',
+  'Great start, {{firstName}}! You''ve saved your first $500. Current: {{currentFund}} Target: {{targetFund}}',
+  'milestone', 'emergency_fund', '["firstName","currentFund","targetFund"]'
+WHERE NOT EXISTS (SELECT 1 FROM email_templates WHERE name = 'EF $500 Milestone');
+
+INSERT INTO email_templates (name, subject, html_content, text_content, template_type, category, variables)
+SELECT 'EF $1000 Milestone', 'Emergency Fund Milestone: $1,000 Saved! 🎉',
+  '<p>Way to go, {{firstName}}! You''ve hit $1,000 in your emergency fund.</p><p>Current: {{currentFund}} / Target: {{targetFund}}</p>',
+  'Way to go, {{firstName}}! You''ve hit $1,000. Current: {{currentFund}} Target: {{targetFund}}',
+  'milestone', 'emergency_fund', '["firstName","currentFund","targetFund"]'
+WHERE NOT EXISTS (SELECT 1 FROM email_templates WHERE name = 'EF $1000 Milestone');
+
+INSERT INTO email_templates (name, subject, html_content, text_content, template_type, category, variables)
+SELECT 'EF Fully Funded', 'Emergency Fund Fully Funded! 🛡️',
+  '<p>Amazing, {{firstName}}! Your emergency fund is fully funded.</p><p>Current: {{currentFund}} / Target: {{targetFund}}</p>',
+  'Amazing, {{firstName}}! Emergency fund fully funded. Current: {{currentFund}} Target: {{targetFund}}',
+  'milestone', 'emergency_fund', '["firstName","currentFund","targetFund"]'
+WHERE NOT EXISTS (SELECT 1 FROM email_templates WHERE name = 'EF Fully Funded');
+
+-- Campaigns for EF milestones
+INSERT INTO email_campaigns (name, description, campaign_type, trigger_event, template_id, target_criteria, is_active, created_at)
+SELECT 'Emergency Fund: $500', 'Celebration when EF hits $500', 'milestone', 'ef_500', (SELECT id FROM email_templates WHERE name = 'EF $500 Milestone'), '{}', true, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM email_campaigns WHERE trigger_event = 'ef_500');
+
+INSERT INTO email_campaigns (name, description, campaign_type, trigger_event, template_id, target_criteria, is_active, created_at)
+SELECT 'Emergency Fund: $1000', 'Celebration when EF hits $1000', 'milestone', 'ef_1000', (SELECT id FROM email_templates WHERE name = 'EF $1000 Milestone'), '{}', true, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM email_campaigns WHERE trigger_event = 'ef_1000');
+
+INSERT INTO email_campaigns (name, description, campaign_type, trigger_event, template_id, target_criteria, is_active, created_at)
+SELECT 'Emergency Fund: Fully Funded', 'Celebration when EF is fully funded', 'milestone', 'ef_full', (SELECT id FROM email_templates WHERE name = 'EF Fully Funded'), '{}', true, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM email_campaigns WHERE trigger_event = 'ef_full');
+
+-- Payment reminder set confirmation
+INSERT INTO email_templates (name, subject, html_content, text_content, template_type, category, variables)
+SELECT 'Payment Reminder Set', 'Payment Reminder Scheduled: {{title}}',
+  '<p>Your reminder has been scheduled.</p><p>{{title}} on {{dueDate}} via {{method}}.</p>',
+  'Your reminder has been scheduled: {{title}} on {{dueDate}} via {{method}}',
+  'reminder', 'calendar', '["title","dueDate","method"]'
+WHERE NOT EXISTS (SELECT 1 FROM email_templates WHERE name = 'Payment Reminder Set');
+
+INSERT INTO email_campaigns (name, description, campaign_type, trigger_event, template_id, target_criteria, is_active, created_at)
+SELECT 'Payment Reminder Set', 'Confirmation when a user schedules a reminder', 'reminder', 'payment_reminder_set', (SELECT id FROM email_templates WHERE name = 'Payment Reminder Set'), '{}', true, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM email_campaigns WHERE trigger_event = 'payment_reminder_set');

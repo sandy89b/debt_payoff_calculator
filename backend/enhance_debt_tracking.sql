@@ -6,7 +6,7 @@ ALTER TABLE debts ADD COLUMN IF NOT EXISTS debt_status VARCHAR(20) DEFAULT 'acti
 
 -- Add notification preferences to users table
 ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{"email": true, "sms": false}';
-ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20);
+-- phone_number is deprecated; use users.phone instead. Keep here for backward compatibility in older DBs.
 
 -- Add automatic detection fields to debts table
 ALTER TABLE debts ADD COLUMN IF NOT EXISTS balance_reached_zero_at TIMESTAMP;

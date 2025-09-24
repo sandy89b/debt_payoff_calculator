@@ -62,6 +62,7 @@ export const PDFExport: React.FC<PDFExportProps> = ({
       toast({
         title: "PDF Generated Successfully!",
         description: "Your personalized debt payoff plan has been downloaded.",
+        variant: "success",
       });
 
       setIsDialogOpen(false);

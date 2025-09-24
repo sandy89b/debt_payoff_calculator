@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Lead = require('../models/Lead');
 const { pool } = require('../config/database');
 const sgMail = require('@sendgrid/mail');
 const jwt = require('jsonwebtoken');
@@ -102,6 +103,78 @@ async function sendPasswordResetEmail(to, resetUrl) {
   }
 }
 
+// Generate short-lived password setup token (5 minutes by default)
+function generatePasswordSetupToken(userId, expiresIn = '5m') {
+  const jwt = require('jsonwebtoken');
+  return jwt.sign({ sub: userId, purpose: 'password_setup' }, process.env.JWT_SECRET || 'dev_secret', { expiresIn });
+}
+
+async function sendPasswordSetupEmail(to, setupUrl) {
+  if (!process.env.SENDGRID_API_KEY) {
+    logger.devInfo(`Password setup link for ${to}: ${setupUrl}`);
+    return true;
+  }
+
+  try {
+    const from = process.env.EMAIL_FROM || '23blastfan@gmail.com';
+    const msg = {
+      to,
+      from,
+      subject: 'Set your Legacy Mindset Solutions password',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2d5a27;">Welcome to Legacy Mindset Solutions!</h2>
+          <p>An admin created an account for you. Click the button below to set your password.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${setupUrl}" style="background-color: #6b46c1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Set Password</a>
+          </div>
+          <p style="color:#555">This link will expire in 5 minutes for your security. If it expires, ask the admin to resend it.</p>
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+          <p style="color: #666; font-size: 12px;">Legacy Mindset Solutions - Harmony in Finance, Harmony in Life</p>
+        </div>
+      `,
+      text: `An admin created an account for you. Set your password here (expires in 5 minutes): ${setupUrl}`
+    };
+    await sgMail.send(msg);
+    logger.emailSent('password setup', to);
+    return true;
+  } catch (error) {
+    logger.emailError('password setup', to, error);
+    if (process.env.NODE_ENV === 'development') {
+      logger.devInfo(`Password setup link for ${to}: ${setupUrl}`);
+      return true;
+    }
+    throw error;
+  }
+}
+
+// Set password with short-lived token
+async function setPassword(req, res) {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Invalid request' });
+    }
+    const jwt = require('jsonwebtoken');
+    const bcrypt = require('bcryptjs');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    if (decoded.purpose !== 'password_setup') {
+      return res.status(400).json({ success: false, message: 'Invalid token purpose' });
+    }
+    const { pool } = require('../config/database');
+    const userRes = await pool.query('SELECT id FROM users WHERE id = $1', [decoded.sub]);
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, decoded.sub]);
+    return res.json({ success: true, message: 'Password set successfully' });
+  } catch (error) {
+    logger.error('Error setting password', error.message);
+    return res.status(400).json({ success: false, message: 'Invalid or expired link' });
+  }
+}
+
 async function sendVerificationSMS(to, code) {
   try {
     const message = `Your Legacy Mindset Solutions verification code is: ${code}. This code will expire in 15 minutes.`;
@@ -159,7 +232,7 @@ async function sendPasswordResetSMS(to, resetCode) {
 class AuthController {
   static async signup(req, res) {
     try {
-      const { firstName, lastName, email, phone, password } = req.validatedData;
+      const { firstName, lastName, email, phone, password, skipVerification } = req.validatedData;
 
       // Check if email exists
       const existingEmailUser = await User.findByEmail(email);
@@ -197,21 +270,79 @@ class AuthController {
         password
       });
 
-      const code = generateVerificationCode();
-      const updateQuery = `
-        UPDATE users SET verification_code = $1, verification_expires_at = NOW() + INTERVAL '15 minutes'
-        WHERE id = $2
-      `;
-      await pool.query(updateQuery, [code, user.id]);
+      // Ensure a lead exists for this signup and convert/link it
+      try {
+        let existingLead = await Lead.findByEmail(email);
 
-      await sendVerificationEmail(email, code);
+        // If no lead yet, create a minimal one from signup
+        if (!existingLead) {
+          existingLead = await Lead.create({
+            firstName: firstName || '',
+            lastName: lastName || '',
+            email,
+            phone: phone || null,
+            totalDebt: 0,
+            totalMinPayments: 0,
+            extraPayment: 0,
+            debtCount: 0,
+            calculationResults: null,
+            source: 'signup'
+          });
+          logger.info('Lead auto-created during signup', { leadId: existingLead.id, email });
+        }
 
-      logger.authSuccess('signup', email);
-      res.status(201).json({
-        success: true,
-        message: 'User created successfully. Verification code sent to email.',
-        data: { user: user.toJSON(), requiresVerification: true }
-      });
+        // Convert/link lead to this user
+        const convertedLead = await Lead.convertToUser(existingLead.id, user.id);
+        logger.info('Lead converted to user during signup', { 
+          leadId: convertedLead.id, 
+          userId: user.id, 
+          email: email 
+        });
+      } catch (leadError) {
+        // Don't fail signup if lead creation/conversion fails
+        logger.error('Failed to ensure lead on signup', { 
+          email, 
+          userId: user.id, 
+          error: leadError.message 
+        });
+      }
+
+      if (skipVerification) {
+        // Skip email verification and provide JWT token immediately
+        const token = jwt.sign(
+          { userId: user.id, email: user.email },
+          process.env.JWT_SECRET,
+          { expiresIn: '7d' }
+        );
+
+        logger.authSuccess('signup', email);
+        res.status(201).json({
+          success: true,
+          message: 'User created successfully.',
+          data: { 
+            user: user.toJSON(), 
+            token,
+            requiresVerification: false 
+          }
+        });
+      } else {
+        // Normal email verification flow
+        const code = generateVerificationCode();
+        const updateQuery = `
+          UPDATE users SET verification_code = $1, verification_expires_at = NOW() + INTERVAL '15 minutes'
+          WHERE id = $2
+        `;
+        await pool.query(updateQuery, [code, user.id]);
+
+        await sendVerificationEmail(email, code);
+
+        logger.authSuccess('signup', email);
+        res.status(201).json({
+          success: true,
+          message: 'User created successfully. Verification code sent to email.',
+          data: { user: user.toJSON(), requiresVerification: true }
+        });
+      }
 
     } catch (error) {
       logger.authError('signup', req.validatedData?.email, error);
@@ -236,7 +367,7 @@ class AuthController {
 
   static async signin(req, res) {
     try {
-      const { emailOrPhone, password } = req.validatedData;
+      const { emailOrPhone, password, twoFactorToken } = req.validatedData;
 
       // Try to find user by email or phone
       const user = await User.findByEmailOrPhone(emailOrPhone);
@@ -261,6 +392,22 @@ class AuthController {
             message: 'Incorrect password. Please check your password and try again.'
           }]
         });
+      }
+
+      // If user has 2FA enabled, verify token
+      const row2fa = await pool.query('SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = $1', [user.id]);
+      const twoFA = row2fa.rows[0];
+      if (twoFA?.two_factor_enabled) {
+        // If code not supplied, return challenge token
+        if (!twoFactorToken) {
+          const tempToken = jwt.sign({ userId: user.id, type: '2fa' }, process.env.JWT_SECRET, { expiresIn: '5m' });
+          return res.json({ success: true, twoFactorRequired: true, tempToken });
+        }
+        const speakeasy = require('speakeasy');
+        const isVerified = speakeasy.totp.verify({ secret: twoFA.two_factor_secret, encoding: 'base32', token: twoFactorToken, window: 1 });
+        if (!isVerified) {
+          return res.status(401).json({ success: false, message: 'Invalid two-factor code', errors: [{ field: 'twoFactorToken', message: 'Invalid or expired 2FA code.' }] });
+        }
       }
 
       // Generate JWT token
@@ -292,6 +439,54 @@ class AuthController {
         message: 'Internal server error'
       });
     }
+  }
+
+  // Verify 2FA code with a temporary token (after password step)
+  static async verifyTwoFactor(req, res) {
+    try {
+      const { tempToken, twoFactorToken } = req.body;
+      if (!tempToken || !twoFactorToken) {
+        return res.status(400).json({ success: false, message: 'Missing parameters' });
+      }
+      let decoded;
+      try {
+        decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+        if (decoded.type !== '2fa') throw new Error('Invalid token');
+      } catch (e) {
+        return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+      }
+
+      const user = await User.findById(decoded.userId);
+      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+      const row = await pool.query('SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = $1', [user.id]);
+      const twoFA = row.rows[0];
+      if (!twoFA?.two_factor_enabled) {
+        return res.status(400).json({ success: false, message: 'Two-factor not enabled' });
+      }
+      const speakeasy = require('speakeasy');
+      const ok = speakeasy.totp.verify({ secret: twoFA.two_factor_secret, encoding: 'base32', token: twoFactorToken, window: 1 });
+      if (!ok) return res.status(401).json({ success: false, message: 'Invalid two-factor code' });
+
+      const token = jwt.sign({ userId: user.id, email: user.email, phone: user.phone, provider: user.provider }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+      return res.json({ success: true, data: { user: user.toJSON(), token } });
+    } catch (error) {
+      logger.authError('verify 2fa', req.body?.tempToken, error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  }
+
+  // Expose password setup email/token for admin-invite flow
+  static generatePasswordSetupToken(userId, expiresIn = '5m') {
+    return generatePasswordSetupToken(userId, expiresIn);
+  }
+
+  static async sendPasswordSetupEmail(to, setupUrl) {
+    return await sendPasswordSetupEmail(to, setupUrl);
+  }
+
+  static async setPassword(req, res) {
+    return await setPassword(req, res);
   }
 
   static async getProfile(req, res) {

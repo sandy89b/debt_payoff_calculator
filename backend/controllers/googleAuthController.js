@@ -2,6 +2,7 @@ const { google } = require('googleapis');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
+const Lead = require('../models/Lead');
 const emailAutomationService = require('../services/emailAutomationService');
 
 class GoogleAuthController {
@@ -88,6 +89,31 @@ class GoogleAuthController {
       
       console.log('OAuth user processed successfully:', { id: user.id, email: user.email, provider: user.provider, isNewUser: user.isNewUser });
 
+      // Ensure a lead exists and is linked/converted for this OAuth signup
+      try {
+        let existingLead = await Lead.findByEmail(email);
+        if (!existingLead) {
+          existingLead = await Lead.create({
+            firstName: user.firstName || firstName || 'User',
+            lastName: user.lastName || lastName || '',
+            email,
+            phone: null,
+            totalDebt: 0,
+            totalMinPayments: 0,
+            extraPayment: 0,
+            debtCount: 0,
+            calculationResults: null,
+            source: 'google_oauth'
+          });
+          logger.info('Lead auto-created during Google OAuth signup', { leadId: existingLead.id, email });
+        }
+
+        await Lead.convertToUser(existingLead.id, user.id);
+        logger.info('Lead converted to user during Google OAuth signup', { leadId: existingLead.id, userId: user.id, email });
+      } catch (leadError) {
+        logger.error('Failed to ensure lead on Google OAuth signup', { email, userId: user.id, error: leadError.message });
+      }
+
       // Trigger welcome email automation for new users
       // Note: OAuth users have verified emails by default, so welcome email is sent immediately
       if (user.isNewUser) {
@@ -104,26 +130,17 @@ class GoogleAuthController {
         }
       }
 
-      // Generate JWT token
-      const token = jwt.sign(
-        { 
-          userId: user.id, 
-          email: user.email,
-          provider: user.provider
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN }
-      );
+      // If 2FA enabled, redirect with a 2FA challenge token
+      const { rows } = await require('../config/database').pool.query('SELECT two_factor_enabled FROM users WHERE id=$1', [user.id]);
+      if (rows[0]?.two_factor_enabled) {
+        const tempToken = jwt.sign({ userId: user.id, type: '2fa' }, process.env.JWT_SECRET, { expiresIn: '5m' });
+        const challengeUrl = `${process.env.FRONTEND_URL}/auth/success?twofa=1&temp=${tempToken}`;
+        return res.redirect(challengeUrl);
+      }
 
-      // Set cookie and redirect to frontend
-      res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-      });
-
-      // Redirect to frontend with success
+      // Otherwise, generate normal JWT and complete login
+      const token = jwt.sign({ userId: user.id, email: user.email, provider: user.provider }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+      res.cookie('auth_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
       const frontendUrl = `${process.env.FRONTEND_URL}/auth/success?token=${token}`;
       res.redirect(frontendUrl);
 

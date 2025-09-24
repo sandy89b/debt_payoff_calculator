@@ -22,6 +22,7 @@ router.put('/campaigns/:id', EmailAutomationController.updateCampaign);
 
 // Email Operations
 router.post('/send-test', EmailAutomationController.sendTestEmail);
+router.post('/templates/:id/test', EmailAutomationController.sendTemplateTestEmail);
 router.get('/analytics', EmailAutomationController.getAnalytics);
 router.get('/sends', EmailAutomationController.getEmailSends);
 

@@ -1,10 +1,24 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone, Mail, Globe } from 'lucide-react';
+import { Phone, Mail, Globe, LogOut, User, Settings } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
+  const { isAuthenticated, user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    try {
+      signOut();
+    } finally {
+      navigate('/auth/signin');
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-soft">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
@@ -64,6 +78,44 @@ export const Header: React.FC = () => {
               <span className="hidden sm:inline">Free Consultation</span>
               <span className="sm:hidden">Contact</span>
             </Button>
+            
+            {isAuthenticated ? (
+              <div className="flex items-center gap-1 sm:gap-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span className="hidden sm:inline text-sm text-foreground/80">
+                        {user?.firstName && user?.lastName 
+                          ? `${user.firstName} ${user.lastName}` 
+                          : user?.name || user?.email}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="text-xs">Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/account/settings')} className="cursor-pointer">
+                      <Settings className="h-4 w-4 mr-2" />
+                      User Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <Button 
+                variant="outline"
+                className="border-brand-purple text-brand-purple hover:bg-brand-purple hover:text-white font-semibold touch-target px-3 lg:px-4"
+                onClick={() => navigate('/auth/signin')}
+              >
+                Login
+              </Button>
+            )}
           </div>
         </div>
       </div>

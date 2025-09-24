@@ -10,24 +10,27 @@ const EmailAnalytics: React.FC = () => {
     getAnalytics(selectedCampaign || undefined, dateRange);
   }, [selectedCampaign, dateRange]);
 
-  const formatNumber = (num: number | null | undefined) => {
-    return (num || 0).toLocaleString();
+  const formatNumber = (num: number | string | null | undefined) => {
+    const numValue = Number(num) || 0;
+    return numValue.toLocaleString();
   };
 
-  const formatPercentage = (rate: string | null | undefined) => {
+  const formatPercentage = (rate: number | string | null | undefined) => {
     if (!rate) return '0.0%';
-    return `${parseFloat(rate).toFixed(1)}%`;
+    const numValue = Number(rate) || 0;
+    return `${numValue.toFixed(1)}%`;
   };
 
-  const formatDecimal = (num: number | null | undefined) => {
-    return (num || 0).toFixed(2);
+  const formatDecimal = (num: number | string | null | undefined) => {
+    const numValue = Number(num) || 0;
+    return numValue.toFixed(2);
   };
 
   if (!analytics) {
     return (
       <div className="p-6">
         <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
           <span className="ml-2 text-gray-600">Loading analytics...</span>
         </div>
       </div>
@@ -45,7 +48,7 @@ const EmailAnalytics: React.FC = () => {
             <select
               value={selectedCampaign || ''}
               onChange={(e) => setSelectedCampaign(e.target.value ? parseInt(e.target.value) : null)}
-              className="border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+              className="border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="">All Campaigns</option>
               {campaigns.map(campaign => (
@@ -59,7 +62,7 @@ const EmailAnalytics: React.FC = () => {
             <select
               value={dateRange}
               onChange={(e) => setDateRange(parseInt(e.target.value))}
-              className="border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+              className="border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
             >
               <option value={7}>Last 7 days</option>
               <option value={30}>Last 30 days</option>
@@ -96,7 +99,7 @@ const EmailAnalytics: React.FC = () => {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -154,8 +157,8 @@ const EmailAnalytics: React.FC = () => {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-green-600 font-semibold text-sm">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <span className="text-purple-600 font-semibold text-sm">
                         {formatPercentage(analytics?.open_rate)}
                       </span>
                     </div>

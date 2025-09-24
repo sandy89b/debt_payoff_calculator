@@ -36,7 +36,7 @@ export const PayoffComparison: React.FC<PayoffComparisonProps> = ({ snowball, av
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Snowball Method */}
-      <Card className="bg-gradient-card shadow-card">
+      <Card className="bg-gradient-card shadow-card dark:bg-zinc-900 dark:border-zinc-800">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-financial-progress">
             <Trophy className="h-5 w-5" />
@@ -60,8 +60,8 @@ export const PayoffComparison: React.FC<PayoffComparisonProps> = ({ snowball, av
             </div>
           </div>
           
-          <div className="bg-success/10 p-4 rounded-lg border border-success/20">
-            <h4 className="font-medium text-success mb-2">Psychological Benefits</h4>
+          <div className="bg-green-50 p-4 rounded-lg border border-green-200 dark:bg-emerald-900/15 dark:border-emerald-800">
+            <h4 className="font-medium text-green-700 mb-2 dark:text-emerald-300">Psychological Benefits</h4>
             <ul className="text-sm space-y-1 text-muted-foreground">
               <li>• Quick wins build momentum</li>
               <li>• Simplified focus on one debt</li>
@@ -72,7 +72,7 @@ export const PayoffComparison: React.FC<PayoffComparisonProps> = ({ snowball, av
       </Card>
 
       {/* Avalanche Method */}
-      <Card className="bg-gradient-card shadow-card">
+      <Card className="bg-gradient-card shadow-card dark:bg-zinc-900 dark:border-zinc-800">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-financial-growth">
             <TrendingDown className="h-5 w-5" />
@@ -108,9 +108,9 @@ export const PayoffComparison: React.FC<PayoffComparisonProps> = ({ snowball, av
       </Card>
 
       {/* Comparison Summary */}
-      <Card className="md:col-span-2 bg-gradient-wisdom shadow-glow">
+      <Card className="md:col-span-2 bg-white border border-purple-100 shadow-card dark:bg-zinc-900 dark:border-zinc-800">
         <CardHeader>
-          <CardTitle className="text-center text-financial-wisdom">Strategy Comparison</CardTitle>
+          <CardTitle className="text-center text-purple-700">Strategy Comparison</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-6">
@@ -132,7 +132,7 @@ export const PayoffComparison: React.FC<PayoffComparisonProps> = ({ snowball, av
             </div>
           </div>
           
-          <div className="mt-6 p-4 bg-background/50 rounded-lg">
+          <div className="mt-6 p-4 bg-muted rounded-lg border border-purple-50">
             <p className="text-sm text-center italic">
               "The plans of the diligent lead to profit as surely as haste leads to poverty." - Proverbs 21:5
             </p>

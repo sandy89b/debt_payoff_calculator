@@ -41,10 +41,10 @@ export const BiblicalVerse: React.FC<BiblicalVerseProps> = ({ className = "" }) 
   }, []);
 
   return (
-    <Card className={`bg-gradient-wisdom shadow-glow ${className}`}>
+    <Card className={`bg-white border border-purple-100 shadow-card dark:bg-zinc-900 dark:border-zinc-800 ${className}`}>
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="mt-1 text-financial-wisdom">
+          <div className="mt-1 text-purple-600">
             <Book className="h-5 w-5" />
           </div>
           <div>

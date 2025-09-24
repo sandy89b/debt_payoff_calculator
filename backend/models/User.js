@@ -53,6 +53,30 @@ class User {
     }
   }
 
+  // Create or return an existing user without requiring a password (admin invite shell)
+  static async upsertShell(shell) {
+    const { firstName = null, lastName = null, email, phone = null } = shell;
+    if (!email) {
+      throw new Error('Email is required to create user shell');
+    }
+    // 1) Try find by email first
+    const existing = await User.findByEmail(email);
+    if (existing) return existing;
+
+    // 2) Create minimal record
+    const query = `
+      INSERT INTO users (first_name, last_name, email, phone, provider)
+      VALUES ($1, $2, $3, $4, 'admin_invite')
+      RETURNING id, first_name, last_name, email, phone, provider, email_verified, role, created_at, updated_at
+    `;
+    const values = [firstName, lastName, email, phone];
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) {
+      throw new Error('Failed to create user');
+    }
+    return new User(result.rows[0]);
+  }
+
   // Create or update OAuth user
   static async createOrUpdateOAuthUser(oauthData) {
     const { googleId, email, firstName, lastName, avatarUrl } = oauthData;

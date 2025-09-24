@@ -9,6 +9,7 @@ require('dotenv').config({ path: './config.env' });
 const { initializeDatabase } = require('./config/database');
 const scheduledEmailService = require('./services/scheduledEmailService');
 const debtBalanceMonitor = require('./services/debtBalanceMonitor');
+const leadEmailScheduler = require('./services/leadEmailScheduler');
 const logger = require('./utils/logger');
 
 // Import routes
@@ -21,6 +22,8 @@ const adminDebtRoutes = require('./routes/adminDebtRoutes');
 const emailAutomationRoutes = require('./routes/emailAutomationRoutes');
 const trackingRoutes = require('./routes/trackingRoutes');
 const scheduledEmailRoutes = require('./routes/scheduledEmailRoutes');
+const leadRoutes = require('./routes/leadRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,10 +39,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting
+// Rate limiting - Increased limits for development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // Increased from 100 to 1000 requests per windowMs for development
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.'
@@ -80,6 +83,8 @@ app.use('/api/admin/debts', adminDebtRoutes);
 app.use('/api/email-automation', emailAutomationRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/scheduled-emails', scheduledEmailRoutes);
+app.use('/api/leads', leadRoutes);
+app.use('/api/user', userRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -117,6 +122,10 @@ const startServer = async () => {
       debtBalanceMonitor.start();
       console.log('✅ Debt balance monitor started');
     }
+    
+    // Initialize and start lead email scheduler
+    leadEmailScheduler.start();
+    console.log('✅ Lead email scheduler started');
     
     // Start listening
     app.listen(PORT, () => {

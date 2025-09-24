@@ -39,7 +39,7 @@ class DebtBalanceMonitor {
   async checkAllDebts() {
     try {
       const query = `
-        SELECT d.*, u.email, u.phone_number, u.notification_preferences
+        SELECT d.*, u.email, u.phone as phone_number, u.notification_preferences
         FROM debts d
         JOIN users u ON d.user_id = u.id
         WHERE d.debt_status = 'active' 
@@ -171,7 +171,7 @@ class DebtBalanceMonitor {
   async checkDebtBalance(debtId, userId) {
     try {
       const query = `
-        SELECT d.*, u.email, u.phone_number, u.notification_preferences
+        SELECT d.*, u.email, u.phone as phone_number, u.notification_preferences
         FROM debts d
         JOIN users u ON d.user_id = u.id
         WHERE d.id = $1 AND d.user_id = $2

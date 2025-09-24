@@ -261,7 +261,7 @@ export const UserGuide = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-brand-green/5">
+    <div className="min-h-screen bg-gradient-to-br from-background to-brand-purple/5">
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-4 py-6">
@@ -324,7 +324,7 @@ export const UserGuide = () => {
                     <div className="pt-4 space-y-2">
                       {feature.steps.map((step, stepIndex) => (
                         <div key={stepIndex} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          <CheckCircle className="h-4 w-4 text-purple-500 flex-shrink-0" />
                           <span className="text-sm text-brand-gray">{step}</span>
                         </div>
                       ))}
@@ -358,7 +358,7 @@ export const UserGuide = () => {
                     <div className="pt-4 space-y-2">
                       {feature.steps.map((step, stepIndex) => (
                         <div key={stepIndex} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          <CheckCircle className="h-4 w-4 text-purple-500 flex-shrink-0" />
                           <span className="text-sm text-brand-gray">{step}</span>
                         </div>
                       ))}
@@ -392,7 +392,7 @@ export const UserGuide = () => {
                     <div className="pt-4 space-y-2">
                       {feature.steps.map((step, stepIndex) => (
                         <div key={stepIndex} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          <CheckCircle className="h-4 w-4 text-purple-500 flex-shrink-0" />
                           <span className="text-sm text-brand-gray">{step}</span>
                         </div>
                       ))}
@@ -426,7 +426,7 @@ export const UserGuide = () => {
                     <div className="pt-4 space-y-2">
                       {feature.steps.map((step, stepIndex) => (
                         <div key={stepIndex} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          <CheckCircle className="h-4 w-4 text-purple-500 flex-shrink-0" />
                           <span className="text-sm text-brand-gray">{step}</span>
                         </div>
                       ))}
@@ -460,7 +460,7 @@ export const UserGuide = () => {
                     <div className="pt-4 space-y-2">
                       {feature.steps.map((step, stepIndex) => (
                         <div key={stepIndex} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          <CheckCircle className="h-4 w-4 text-purple-500 flex-shrink-0" />
                           <span className="text-sm text-brand-gray">{step}</span>
                         </div>
                       ))}
@@ -515,7 +515,7 @@ export const UserGuide = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
                   size="lg" 
-                  className="bg-white text-brand-green hover:bg-white/90 font-semibold"
+                  className="bg-white text-brand-purple hover:bg-white/90 font-semibold"
                   onClick={() => window.open('https://legacymindsetsolutions.com/contact', '_blank')}
                 >
                   Contact Support

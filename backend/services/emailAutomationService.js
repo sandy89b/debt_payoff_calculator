@@ -361,8 +361,13 @@ class EmailAutomationService {
         ...customVariables
       };
 
-      // Process template
-      const processedTemplate = this.processTemplate(campaign, variables);
+      // Process template - only pass serializable template data
+      const templateData = {
+        subject: campaign.subject,
+        html_content: campaign.html_content,
+        text_content: campaign.text_content
+      };
+      const processedTemplate = this.processTemplate(templateData, variables);
 
       // Send email
       const emailResult = await this.sendEmail(
@@ -815,6 +820,36 @@ class EmailAutomationService {
     await this.sendDebtMilestoneSMS(userId, milestoneType, debtName, percentage);
   }
 
+  // Trigger emergency fund milestones
+  async triggerEmergencyFundMilestone(userId, efData) {
+    const { milestone, currentFund = 0, targetFund = 0 } = efData || {};
+    let triggerEvent = '';
+    let eventData = {
+      currentFund: this.formatCurrency(currentFund || 0),
+      targetFund: this.formatCurrency(targetFund || 0)
+    };
+
+    switch (milestone) {
+      case '500':
+        triggerEvent = 'ef_500';
+        eventData.encouragementMessage = 'Foundation started! First $500 saved for emergencies.';
+        break;
+      case '1000':
+        triggerEvent = 'ef_1000';
+        eventData.encouragementMessage = 'Great job! $1,000 emergency cushion reached.';
+        break;
+      case 'full':
+        triggerEvent = 'ef_full';
+        eventData.encouragementMessage = 'Fully funded emergency fund! Now accelerate debt payoff.';
+        break;
+      default:
+        logger.warn(`Unknown emergency fund milestone: ${milestone}`);
+        return;
+    }
+
+    await this.triggerCampaignByEvent(triggerEvent, userId, eventData);
+  }
+
   // Trigger framework step completion emails
   async triggerFrameworkStep(userId, stepData) {
     const { stepNumber, stepTitle, isComplete, allStepsComplete } = stepData;
@@ -1144,6 +1179,80 @@ class EmailAutomationService {
         error: error.message
       });
       return { success: false, error: error.message };
+    }
+  }
+
+  // Send lead nurturing email
+  async sendLeadEmail(leadId, triggerEvent, variables = {}) {
+    try {
+      // Get the campaign for this trigger event
+      const campaignQuery = `
+        SELECT c.*, t.*
+        FROM email_campaigns c
+        JOIN email_templates t ON c.template_id = t.id
+        WHERE c.trigger_event = $1 AND c.is_active = true
+      `;
+      
+      const campaignResult = await pool.query(campaignQuery, [triggerEvent]);
+      if (campaignResult.rows.length === 0) {
+        throw new Error(`No active campaign found for trigger event: ${triggerEvent}`);
+      }
+
+      const campaign = campaignResult.rows[0];
+      
+      // Get lead information
+      const leadQuery = 'SELECT * FROM leads WHERE id = $1';
+      const leadResult = await pool.query(leadQuery, [leadId]);
+      if (leadResult.rows.length === 0) {
+        throw new Error(`Lead with ID ${leadId} not found`);
+      }
+
+      const lead = leadResult.rows[0];
+      
+      // Process template with variables - only pass serializable template data
+      const templateData = {
+        subject: campaign.subject,
+        html_content: campaign.html_content,
+        text_content: campaign.text_content
+      };
+      const processedTemplate = this.processTemplate(templateData, variables);
+      
+      // Send the email
+      const result = await this.sendEmail(
+        lead.email,
+        processedTemplate.subject,
+        processedTemplate.html_content,
+        processedTemplate.text_content
+      );
+
+      // Log the email send
+      await this.logLeadEmail(leadId, triggerEvent, campaign.id, lead.email, 'sent');
+
+      logger.info(`Lead email sent successfully`, {
+        leadId,
+        triggerEvent,
+        email: lead.email,
+        subject: processedTemplate.subject
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('Error sending lead email:', error);
+      throw error;
+    }
+  }
+
+  // Log lead email send
+  async logLeadEmail(leadId, triggerEvent, templateId, emailAddress, status = 'sent', errorMessage = null) {
+    try {
+      const query = `
+        INSERT INTO lead_email_log (lead_id, trigger_event, template_id, email_address, status, error_message)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `;
+      
+      await pool.query(query, [leadId, triggerEvent, templateId, emailAddress, status, errorMessage]);
+    } catch (error) {
+      logger.error('Error logging lead email:', error);
     }
   }
 }
