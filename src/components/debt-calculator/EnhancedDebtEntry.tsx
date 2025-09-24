@@ -300,7 +300,7 @@ export const EnhancedDebtEntry: React.FC<EnhancedDebtEntryProps> = ({
               value={debt.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="e.g., Chase Freedom Credit Card"
-              disabled={isReadOnly}
+              disabled={isReadOnly} 
               readOnly={isReadOnly}
               className={`mt-1 ${validationErrors.name ? 'border-red-500 focus:border-red-500' : ''}`}
             />

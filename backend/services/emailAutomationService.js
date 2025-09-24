@@ -17,14 +17,32 @@ class EmailAutomationService {
   processTemplate(template, variables = {}) {
     let processedTemplate = { ...template };
     
+    // Provide backwards-compatible variable aliases so legacy templates continue to work
+    // Many historical templates used {{userName}}; map it to firstName when available
+    const variablesWithAliases = { ...variables };
+    const firstName = variables.firstName || variables.first_name;
+    const lastName = variables.lastName || variables.last_name;
+    const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+    
+    if (firstName && !variablesWithAliases.userName) {
+      variablesWithAliases.userName = firstName; // legacy alias -> prefer first name
+    }
+    // Additional common aliases that may appear in hand-authored templates
+    if (firstName && !variablesWithAliases.username) {
+      variablesWithAliases.username = firstName;
+    }
+    if (fullName && !variablesWithAliases.fullName) {
+      variablesWithAliases.fullName = fullName;
+    }
+    
     // Process subject
-    processedTemplate.subject = this.substituteVariables(template.subject || '', variables);
+    processedTemplate.subject = this.substituteVariables(template.subject || '', variablesWithAliases);
     
     // Process HTML content
-    processedTemplate.html_content = this.substituteVariables(template.html_content || '', variables);
+    processedTemplate.html_content = this.substituteVariables(template.html_content || '', variablesWithAliases);
     
     // Process text content
-    processedTemplate.text_content = this.substituteVariables(template.text_content || '', variables);
+    processedTemplate.text_content = this.substituteVariables(template.text_content || '', variablesWithAliases);
     
     return processedTemplate;
   }

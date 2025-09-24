@@ -12,7 +12,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 </div>
 
 <div style="padding: 30px; background: #f8f9fa;">
-    <p>Dear {{userName}},</p>
+    <p>Dear {{firstName}},</p>
     
     <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 20px 0;">
         <h3>🎯 Debt Balance Alert!</h3>
@@ -58,7 +58,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 '🎉 AMAZING NEWS! 🎉
 Your {{debtName}} Balance Reached $0!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 🎯 Debt Balance Alert!
 Your "{{debtName}}" debt has reached a $0 balance!

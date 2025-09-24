@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, TrendingUp, CheckCircle2, Calendar, Percent, Goal, Bell, GraduationCap, BookOpen, Trophy, Users, Heart, HeartHandshake, LineChart, ShieldCheck, HelpingHand, Settings } from 'lucide-react';
+import { DollarSign, TrendingUp, CheckCircle2, Calendar, Percent, Goal, Bell, GraduationCap, BookOpen, Trophy, Users, Heart, HeartHandshake, LineChart, ShieldCheck, HelpingHand, Settings, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Debt {
@@ -13,10 +13,21 @@ interface Debt {
   interestRate: number;
   dueDate: number;
   isPaidOff?: boolean;
+  isActive?: boolean;
+  debtType?: string;
+  description?: string;
+  originalBalance?: number;
+  priority?: number;
+  debtStatus?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 function getAuthHeaders() {
   const token = localStorage.getItem('auth_token');
+  if (!token) {
+    console.warn('No auth token found - user may not be authenticated');
+  }
   return {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` })
@@ -28,27 +39,53 @@ const DashboardOverview: React.FC = () => {
   const navigate = useNavigate();
   const [debts, setDebts] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadDashboardData = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      
+      // Fetch both debts and statistics for better performance
+      const [debtsRes, statsRes] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/debts?includeInactive=true`, {
+          headers: getAuthHeaders()
+        }),
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/debts/statistics`, {
+          headers: getAuthHeaders()
+        })
+      ]);
+      
+      const debtsJson = await debtsRes.json();
+      const statsJson = await statsRes.json();
+      
+      if (!debtsRes.ok) throw new Error(debtsJson.message || 'Failed to load debts');
+      if (!statsRes.ok) throw new Error(statsJson.message || 'Failed to load statistics');
+      
+      setDebts(debtsJson.data || []);
+      // Store statistics for potential future use
+      console.log('Debt statistics:', statsJson.data);
+      
+      if (isRefresh) {
+        toast({ title: 'Success', description: 'Dashboard data refreshed', variant: 'success' });
+      }
+    } catch (e: any) {
+      console.error('Dashboard load error:', e);
+      toast({ title: 'Error', description: e.message || 'Failed to load dashboard data', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/debts?includeInactive=true`, {
-          headers: getAuthHeaders()
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.message || 'Failed to load debts');
-        setDebts(json.data || []);
-      } catch (e: any) {
-        toast({ title: 'Error', description: e.message || 'Failed to load debts', variant: 'destructive' });
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    loadDashboardData();
   }, [toast]);
 
-  const active = debts.filter(d => !d.isPaidOff);
+  const active = debts.filter(d => d.isActive && !d.isPaidOff);
   const paidOff = debts.filter(d => d.isPaidOff);
   const totalActiveBalance = active.reduce((s, d) => s + (d.balance || 0), 0);
   const totalActiveMinPayments = active.reduce((s, d) => s + (d.minimumPayment || 0), 0);
@@ -75,10 +112,21 @@ const DashboardOverview: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Overview of your debt journey</p>
         </div>
-        <Button onClick={() => navigate('/calculator')} className="bg-primary hover:bg-primary/90">
-          <TrendingUp className="h-4 w-4 mr-2" />
-          Open Calculator
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => loadDashboardData(true)} 
+            disabled={refreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button onClick={() => navigate('/calculator')} className="bg-primary hover:bg-primary/90">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Open Calculator
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

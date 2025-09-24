@@ -22,3 +22,43 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables and credentials
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# API Keys and Secrets
+*.key
+*.pem
+*.p12
+*.pfx
+credentials.json
+service-account.json
+
+# Twilio credentials
+TWILIO_*
+twilio_*
+
+# SendGrid credentials
+SENDGRID_*
+sendgrid_*
+
+# Database credentials
+DATABASE_*
+DB_*
+
+# JWT secrets
+JWT_SECRET
+SECRET_KEY
+
+# Other sensitive files
+config/secrets.js
+config/credentials.js
+secrets/
+credentials/
+config.env
+backend/config.env

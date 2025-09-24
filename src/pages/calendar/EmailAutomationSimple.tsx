@@ -8,7 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Send, BarChart3, Plus, Eye, Edit, Trash2, Save, X, Play, Pause, Calendar, Users } from 'lucide-react';
+import { Mail, Send, BarChart3, Plus, Eye, Edit, Trash2, Save, X, Play, Pause, Calendar, Users, MoreHorizontal } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious, PaginationLink } from '@/components/ui/pagination';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface EmailTemplate {
   id: string;
@@ -49,6 +52,12 @@ const EmailAutomationSimple: React.FC = () => {
   const [selectedTemplateForTest, setSelectedTemplateForTest] = useState<EmailTemplate | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(20); // 0 = show all
+  const [campaignPage, setCampaignPage] = useState(1);
+  const [campaignPageSize, setCampaignPageSize] = useState<number>(20);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<EmailTemplate | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     name: '',
     subject: '',
@@ -60,7 +69,6 @@ const EmailAutomationSimple: React.FC = () => {
   });
 
   useEffect(() => {
-    console.log('EmailAutomationSimple component mounted');
     loadTemplates();
     loadCampaigns();
   }, []);
@@ -74,7 +82,7 @@ const EmailAutomationSimple: React.FC = () => {
       const data = await response.json();
       if (data.success) {
         setTemplates(data.data || []);
-        console.log('Loaded templates:', data.data);
+        setPage(1);
       }
     } catch (error) {
       console.error('Error loading templates:', error);
@@ -96,7 +104,6 @@ const EmailAutomationSimple: React.FC = () => {
       const data = await response.json();
       if (data.success) {
         setCampaigns(data.data || []);
-        console.log('Loaded campaigns:', data.data);
       }
     } catch (error) {
       console.error('Error loading campaigns:', error);
@@ -161,6 +168,31 @@ const EmailAutomationSimple: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDeleteTemplate = async (template: EmailTemplate) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/email-automation/templates/${template.id}` , {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast({ title: 'Deleted', description: 'Template deleted successfully', variant: 'success' });
+        await loadTemplates();
+        setDeleteOpen(false);
+        setTemplateToDelete(null);
+      } else {
+        throw new Error(data.message || 'Delete failed');
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to delete template', variant: 'destructive' });
+    }
+  };
+
+  const openDeleteModal = (template: EmailTemplate) => {
+    setTemplateToDelete(template);
+    setDeleteOpen(true);
   };
 
   const handleCreateCampaign = async () => {
@@ -266,16 +298,12 @@ const EmailAutomationSimple: React.FC = () => {
     setSendingTestEmail(true);
 
     try {
-      console.log('Sending test email to:', testEmail, 'for template:', template.id);
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/email-automation/templates/${template.id}/test`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ email: testEmail })
       });
-
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
       
       if (data.success) {
         toast({
@@ -335,20 +363,20 @@ const EmailAutomationSimple: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Email Automation</h1>
-          <p className="text-gray-600">Manage email campaigns and lead nurturing sequences</p>
+    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8 max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Email Automation</h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage email campaigns and lead nurturing sequences</p>
         </div>
-        <Button onClick={handleTest}>
+        <Button onClick={handleTest} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Test Button
         </Button>
       </div>
 
       {/* Simple Analytics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
         <Card className="border-0 shadow-sm bg-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -407,10 +435,10 @@ const EmailAutomationSimple: React.FC = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+      <div className="flex overflow-x-auto gap-2 bg-gray-100 p-1 rounded-lg -mx-3 sm:mx-0 px-3 sm:px-1">
         <button
           onClick={() => setActiveTab('templates')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
             activeTab === 'templates'
               ? 'bg-white text-purple-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
@@ -420,7 +448,7 @@ const EmailAutomationSimple: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('campaigns')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
             activeTab === 'campaigns'
               ? 'bg-white text-purple-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
@@ -430,7 +458,7 @@ const EmailAutomationSimple: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('analytics')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
             activeTab === 'analytics'
               ? 'bg-white text-purple-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
@@ -443,20 +471,20 @@ const EmailAutomationSimple: React.FC = () => {
       {/* Main Content Area */}
       <Card className="border-0 shadow-sm bg-white">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-lg sm:text-xl">
               {activeTab === 'templates' && 'Email Templates'}
               {activeTab === 'campaigns' && 'Email Campaigns'}
               {activeTab === 'analytics' && 'Email Analytics'}
             </CardTitle>
             {activeTab === 'templates' && (
-              <Button onClick={() => setCreateOpen(true)}>
+              <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Template
               </Button>
             )}
             {activeTab === 'campaigns' && (
-              <Button onClick={() => setEditingCampaign({
+              <Button className="w-full sm:w-auto" onClick={() => setEditingCampaign({
                 id: '',
                 name: '',
                 description: '',
@@ -473,7 +501,7 @@ const EmailAutomationSimple: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Templates Tab */}
+          {/* Templates Tab - Table View with Pagination */}
           {activeTab === 'templates' && (
             <>
               {loading ? (
@@ -482,123 +510,236 @@ const EmailAutomationSimple: React.FC = () => {
                   <span className="ml-2 text-gray-600">Loading templates...</span>
                 </div>
               ) : templates.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template) => (
-                <Card key={template.id} className="border border-gray-200 hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg font-semibold text-gray-900">{template.name}</CardTitle>
-                      <Badge variant={template.is_active ? "default" : "secondary"}>
-                        {template.is_active ? "Active" : "Inactive"}
-                      </Badge>
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="text-sm text-gray-600">Showing {pageSize === 0 ? templates.length : Math.min(page * pageSize, templates.length)} of {templates.length}</div>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="pageSize" className="text-sm text-gray-600">Rows per page</Label>
+                      <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                        <SelectTrigger id="pageSize" className="w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">All</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <p className="text-sm text-gray-600">{template.subject}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{template.template_type}</Badge>
-                        <Badge variant="outline">{template.category}</Badge>
+                  </div>
+
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="hidden md:table-cell">Subject</TableHead>
+                        <TableHead className="hidden sm:table-cell">Type</TableHead>
+                        <TableHead className="hidden lg:table-cell">Category</TableHead>
+                        <TableHead className="hidden md:table-cell">Created</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-center w-0">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(pageSize === 0 ? templates : templates.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)).map((template) => (
+                        <TableRow key={template.id}>
+                          <TableCell className="font-medium break-words max-w-[220px]">{template.name}</TableCell>
+                          <TableCell className="hidden md:table-cell break-words max-w-[400px]">{template.subject}</TableCell>
+                          <TableCell className="hidden sm:table-cell"><Badge variant="outline">{template.template_type}</Badge></TableCell>
+                          <TableCell className="hidden lg:table-cell"><Badge variant="outline">{template.category}</Badge></TableCell>
+                          <TableCell className="hidden md:table-cell">{new Date(template.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Badge variant={template.is_active ? 'default' : 'secondary'}>
+                              {template.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="mx-auto">
+                                  <MoreHorizontal className="h-5 w-5" />
+                                  <span className="sr-only">Open actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem onClick={() => handlePreview(template)} className="cursor-pointer">
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Preview
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEdit(template)} className="cursor-pointer">
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setSelectedTemplateForTest(template); setTestEmailModalOpen(true); }} className="cursor-pointer">
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Test
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openDeleteModal(template)} className="cursor-pointer text-red-600 focus:text-red-700">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {pageSize !== 0 && templates.length > pageSize && (
+                    <Pagination className="justify-end">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(1, p - 1)); }} />
+                        </PaginationItem>
+                        {Array.from({ length: Math.ceil(templates.length / pageSize) }).slice(0, 5).map((_, idx) => {
+                          const p = idx + 1;
+                          return (
+                            <PaginationItem key={p}>
+                              <PaginationLink href="#" isActive={p === page} onClick={(e) => { e.preventDefault(); setPage(p); }}>
+                                {p}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        <PaginationItem>
+                          <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setPage((p) => Math.min(Math.ceil(templates.length / pageSize), p + 1)); }} />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+
+                  {/* Delete Confirmation Modal */}
+                  <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Delete template?</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600">This action cannot be undone. This will permanently delete the template{templateToDelete ? ` "${templateToDelete.name}"` : ''}.</p>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        <p><strong>Created:</strong> {new Date(template.created_at).toLocaleDateString()}</p>
+                      <div className="mt-4 flex items-center justify-end gap-2">
+                        <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+                        <Button variant="destructive" onClick={() => templateToDelete && handleDeleteTemplate(templateToDelete)}>Delete</Button>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handlePreview(template)}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          Preview
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(template)}>
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedTemplateForTest(template);
-                            setTestEmailModalOpen(true);
-                          }}
-                        >
-                          <Send className="h-4 w-4 mr-1" />
-                          Test
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Email Templates</h3>
-              <p className="text-gray-600 mb-4">Create your first email template to get started.</p>
-              <Button onClick={handleTest}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Template
-              </Button>
-            </div>
-          )}
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Email Templates</h3>
+                  <p className="text-gray-600 mb-4">Create your first email template to get started.</p>
+                  <Button onClick={() => setCreateOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Template
+                  </Button>
+                </div>
+              )}
             </>
           )}
 
-          {/* Campaigns Tab */}
+          {/* Campaigns Tab - Table View with Pagination */}
           {activeTab === 'campaigns' && (
             <>
               {campaigns.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {campaigns.map((campaign) => (
-                    <Card key={campaign.id} className="border border-gray-200 hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg font-semibold text-gray-900">{campaign.name}</CardTitle>
-                          <Badge variant={campaign.is_active ? "default" : "secondary"}>
-                            {campaign.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">{campaign.description}</p>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{campaign.trigger_event}</Badge>
-                            <Badge variant="outline">{campaign.template_name || 'No Template'}</Badge>
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            <p><strong>Created:</strong> {new Date(campaign.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleToggleCampaignStatus(campaign)}
-                            >
-                              {campaign.is_active ? (
-                                <>
-                                  <Pause className="h-4 w-4 mr-1" />
-                                  Deactivate
-                                </>
-                              ) : (
-                                <>
-                                  <Play className="h-4 w-4 mr-1" />
-                                  Activate
-                                </>
-                              )}
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setEditingCampaign(campaign)}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="text-sm text-gray-600">Showing {campaignPageSize === 0 ? campaigns.length : Math.min(campaignPage * campaignPageSize, campaigns.length)} of {campaigns.length}</div>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="campaignPageSize" className="text-sm text-gray-600">Rows per page</Label>
+                      <Select value={String(campaignPageSize)} onValueChange={(v) => { setCampaignPageSize(Number(v)); setCampaignPage(1); }}>
+                        <SelectTrigger id="campaignPageSize" className="w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">All</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="hidden md:table-cell">Description</TableHead>
+                        <TableHead className="hidden sm:table-cell">Trigger</TableHead>
+                        <TableHead className="hidden lg:table-cell">Template</TableHead>
+                        <TableHead className="hidden md:table-cell">Created</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-center w-0">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(campaignPageSize === 0 ? campaigns : campaigns.slice((campaignPage - 1) * campaignPageSize, (campaignPage - 1) * campaignPageSize + campaignPageSize)).map((campaign) => (
+                        <TableRow key={campaign.id}>
+                          <TableCell className="font-medium break-words max-w-[260px]">{campaign.name}</TableCell>
+                          <TableCell className="hidden md:table-cell break-words max-w-[480px]">{campaign.description}</TableCell>
+                          <TableCell className="hidden sm:table-cell"><Badge variant="outline">{campaign.trigger_event}</Badge></TableCell>
+                          <TableCell className="hidden lg:table-cell"><Badge variant="outline">{campaign.template_name || 'No Template'}</Badge></TableCell>
+                          <TableCell className="hidden md:table-cell">{new Date(campaign.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Badge variant={campaign.is_active ? 'default' : 'secondary'}>
+                              {campaign.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="mx-auto">
+                                  <MoreHorizontal className="h-5 w-5" />
+                                  <span className="sr-only">Open actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => setEditingCampaign(campaign)} className="cursor-pointer">
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleToggleCampaignStatus(campaign)} className="cursor-pointer">
+                                  {campaign.is_active ? (
+                                    <>
+                                      <Pause className="h-4 w-4 mr-2" /> Deactivate
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Play className="h-4 w-4 mr-2" /> Activate
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {campaignPageSize !== 0 && campaigns.length > campaignPageSize && (
+                    <Pagination className="justify-end">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCampaignPage((p) => Math.max(1, p - 1)); }} />
+                        </PaginationItem>
+                        {Array.from({ length: Math.ceil(campaigns.length / campaignPageSize) }).slice(0, 5).map((_, idx) => {
+                          const p = idx + 1;
+                          return (
+                            <PaginationItem key={p}>
+                              <PaginationLink href="#" isActive={p === campaignPage} onClick={(e) => { e.preventDefault(); setCampaignPage(p); }}>
+                                {p}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        <PaginationItem>
+                          <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCampaignPage((p) => Math.min(Math.ceil(campaigns.length / campaignPageSize), p + 1)); }} />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">

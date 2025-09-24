@@ -6,7 +6,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 'Congratulations! You Just Paid Off Your First Debt!',
 '<html><body>
 <h1>Congratulations!</h1>
-<p>Dear {{userName}},</p>
+<p>Dear {{firstName}},</p>
 <p><strong>Amazing news!</strong> You just paid off <strong>{{debtName}}</strong> - your first step toward complete financial freedom!</p>
 <h2>Amount Paid Off: {{amount}}</h2>
 <p>You are {{percentage}}% closer to being completely debt-free!</p>
@@ -26,7 +26,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 </body></html>',
 'Congratulations! You Just Paid Off Your First Debt!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 Amazing news! You just paid off {{debtName}} - your first step toward complete financial freedom!
 
@@ -46,7 +46,7 @@ Celebrating your victory!
 Legacy Mindset Solutions',
 'milestone',
 'debt_freedom',
-'["userName", "debtName", "amount", "percentage", "remainingDebt"]',
+'["firstName", "debtName", "amount", "percentage", "remainingDebt"]',
 true);
 
 INSERT INTO email_templates (name, subject, html_content, text_content, template_type, category, variables, is_active) VALUES
@@ -54,7 +54,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 'Amazing Progress! You are 25% Debt-Free!',
 '<html><body>
 <h1>Milestone Achieved!</h1>
-<p>Dear {{userName}},</p>
+<p>Dear {{firstName}},</p>
 <p><strong>Incredible progress!</strong> You just paid off <strong>{{debtName}}</strong> and reached a major milestone!</p>
 <h2>25% DEBT-FREE!</h2>
 <p>Just paid off: {{amount}}</p>
@@ -68,7 +68,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 </body></html>',
 'Amazing Progress! You are 25% Debt-Free!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 Incredible progress! You just paid off {{debtName}} and reached a major milestone!
 
@@ -85,7 +85,7 @@ You are building incredible momentum! Every debt you pay off makes the next one 
 Legacy Mindset Solutions',
 'milestone',
 'debt_freedom',
-'["userName", "debtName", "amount", "percentage", "remainingDebt"]',
+'["firstName", "debtName", "amount", "percentage", "remainingDebt"]',
 true);
 
 INSERT INTO email_templates (name, subject, html_content, text_content, template_type, category, variables, is_active) VALUES
@@ -93,7 +93,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 'Halfway There! 50% Debt-Free Milestone Reached!',
 '<html><body>
 <h1>Halfway There!</h1>
-<p>Dear {{userName}},</p>
+<p>Dear {{firstName}},</p>
 <p><strong>YOU ARE HALFWAY TO COMPLETE DEBT FREEDOM!</strong></p>
 <p>You just paid off <strong>{{debtName}}</strong> ({{amount}}) and you have now eliminated <strong>HALF</strong> of your total debt!</p>
 <h2>50% DEBT-FREE!</h2>
@@ -107,7 +107,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 </body></html>',
 'Halfway There! 50% Debt-Free Milestone Reached!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 YOU ARE HALFWAY TO COMPLETE DEBT FREEDOM!
 
@@ -124,7 +124,7 @@ The finish line is in sight! The momentum you have built is incredible.
 Legacy Mindset Solutions',
 'milestone',
 'debt_freedom',
-'["userName", "debtName", "amount", "percentage", "remainingDebt"]',
+'["firstName", "debtName", "amount", "percentage", "remainingDebt"]',
 true);
 
 INSERT INTO email_templates (name, subject, html_content, text_content, template_type, category, variables, is_active) VALUES
@@ -132,7 +132,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 'DEBT-FREE! You Did It - Complete Financial Freedom!',
 '<html><body>
 <h1>DEBT-FREE!</h1>
-<p>Dear {{userName}},</p>
+<p>Dear {{firstName}},</p>
 <p><strong>CONGRATULATIONS!</strong> You have achieved what many only dream of - complete freedom from debt!</p>
 <h2>100% DEBT-FREE!</h2>
 <p>Final debt paid: {{debtName}} - {{amount}}</p>
@@ -154,7 +154,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, template
 </body></html>',
 'DEBT-FREE! You Did It - Complete Financial Freedom!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 CONGRATULATIONS! You have achieved what many only dream of - complete freedom from debt!
 

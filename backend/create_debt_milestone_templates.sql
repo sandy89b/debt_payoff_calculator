@@ -33,7 +33,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, variable
         <div class="content">
             <div class="celebration">🎊✨🏆✨🎊</div>
             
-            <p>Dear {{userName}},</p>
+            <p>Dear {{firstName}},</p>
             
             <p><strong>This is HUGE!</strong> You just paid off <strong>{{debtName}}</strong> - your first step toward complete financial freedom!</p>
             
@@ -78,7 +78,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, variable
 '🎉 CONGRATULATIONS! 🎉
 You Just Paid Off Your First Debt!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 This is HUGE! You just paid off {{debtName}} - your first step toward complete financial freedom!
 
@@ -141,7 +141,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, variable
         <div class="content">
             <div class="milestone">🌟 25% 🌟</div>
             
-            <p>Dear {{userName}},</p>
+            <p>Dear {{firstName}},</p>
             
             <p><strong>Incredible progress!</strong> You just paid off <strong>{{debtName}}</strong> and reached a major milestone!</p>
             
@@ -179,7 +179,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, variable
 '🎯 MILESTONE ACHIEVED! 🎯
 You''re 25% Debt-Free!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 Incredible progress! You just paid off {{debtName}} and reached a major milestone!
 
@@ -233,7 +233,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, variable
         <div class="content">
             <div class="milestone">🎯 50% 🎯</div>
             
-            <p>Dear {{userName}},</p>
+            <p>Dear {{firstName}},</p>
             
             <div class="celebration">
                 🎉 YOU''RE HALFWAY TO COMPLETE DEBT FREEDOM! 🎉
@@ -266,7 +266,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, variable
 '🚀 HALFWAY THERE! 🚀
 50% Debt-Free Milestone!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 🎉 YOU''RE HALFWAY TO COMPLETE DEBT FREEDOM! 🎉
 
@@ -319,7 +319,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, variable
         <div class="content">
             <div class="celebration">🏆🎉✨🎊✨🎉🏆</div>
             
-            <p>Dear {{userName}},</p>
+            <p>Dear {{firstName}},</p>
             
             <div class="achievement">
                 <h2>🎯 100% DEBT-FREE! 🎯</h2>
@@ -367,7 +367,7 @@ INSERT INTO email_templates (name, subject, html_content, text_content, variable
 YOU DID IT!
 Complete Financial Freedom Achieved!
 
-Dear {{userName}},
+Dear {{firstName}},
 
 🏆🎉✨🎊✨🎉🏆
 
@@ -400,6 +400,6 @@ We are SO proud of you! 🎉
 
 Legacy Mindset Solutions
 Harmony in Finance, Harmony in Life',
-'["userName", "debtName", "amount", "totalDebt"]',
+'["firstName", "debtName", "amount", "totalDebt"]',
 true,
 CURRENT_TIMESTAMP);

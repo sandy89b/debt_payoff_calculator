@@ -18,14 +18,6 @@ import { useAuth } from '@/contexts/AuthContext';
 class DebtAPIService {
   static getAuthHeaders() {
     const token = localStorage.getItem('auth_token');
-    
-    // Debug logging
-    if (!token) {
-      console.warn('🚨 No auth token found in localStorage');
-      console.log('Auth status:', localStorage.getItem('auth_status'));
-      console.log('User data exists:', !!localStorage.getItem('user_data'));
-    }
-    
     return {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })
@@ -617,33 +609,15 @@ export const EnhancedDebtCalculator: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Header */}
-      <div className="text-center space-y-4 animate-fade-in-slow">
+      {/* <div className="text-center space-y-4 animate-fade-in-slow">
         <h1 className="text-4xl font-bold text-primary">
         The Pour & Payoff Planner™                                        
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Enter your debts below to create a personalized plan for financial freedom using biblical wisdom.
         </p>
-      </div>
+      </div> */}
 
-      {/* Validation Summary */}
-      {/* {(validationSummary.totalErrors > 0 || validationSummary.totalWarnings > 0) && (
-        <Alert className={validationSummary.totalErrors > 0 ? "border-red-200 bg-red-50" : "border-yellow-200 bg-yellow-50"}>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {validationSummary.totalErrors > 0 && (
-              <span className="text-red-700 font-medium">
-                {validationSummary.totalErrors} error(s) need to be fixed. 
-              </span>
-            )}
-            {validationSummary.totalWarnings > 0 && (
-              <span className="text-yellow-700 font-medium ml-2">
-                {validationSummary.totalWarnings} warning(s) detected.                                        
-              </span>
-            )}
-          </AlertDescription>
-        </Alert>
-      )} */}
 
       {/* Debt Entries Section */}
       <Card className="bg-gradient-card shadow-card animate-slide-in-up dark:bg-zinc-900 dark:border-zinc-800">
