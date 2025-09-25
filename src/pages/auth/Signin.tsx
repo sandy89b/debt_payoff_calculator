@@ -188,7 +188,7 @@ export const Signin: React.FC = () => {
                     <Input id="twofa" inputMode="numeric" maxLength={6} placeholder="______" value={twoFactorToken} onChange={(e) => setTwoFactorToken(e.target.value.replace(/[^0-9]/g, ''))} className="tracking-widest" />
                     <Button type="button" onClick={async () => {
                       try {
-                        const response = await fetch('http://localhost:3001/api/auth/verify-2fa', {
+                        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/verify-2fa`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ tempToken: twoFactorChallenge.tempToken, twoFactorToken })

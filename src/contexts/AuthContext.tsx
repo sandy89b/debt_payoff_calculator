@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         requestBody.twoFactorToken = twoFactorToken;
       }
 
-      const response = await fetch('http://localhost:3001/api/auth/signin', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/signin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/signup', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -190,7 +190,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/verify-code', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/verify-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -228,7 +228,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/resend-code', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/resend-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -249,7 +249,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/forgot-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -270,7 +270,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/reset-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -291,7 +291,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/send-phone-code', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/send-phone-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -312,7 +312,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/verify-phone-code', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/verify-phone-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -350,7 +350,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/forgot-password-phone', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/forgot-password-phone`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -371,7 +371,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:3001/api/auth/reset-password-phone', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/reset-password-phone`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -425,7 +425,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       
       // First, get the Google OAuth URL from the backend
-      const response = await fetch('http://localhost:3001/api/auth/google/url', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/google/url`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

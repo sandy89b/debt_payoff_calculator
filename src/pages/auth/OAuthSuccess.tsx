@@ -24,7 +24,7 @@ export const OAuthSuccess: React.FC = () => {
 
     if (token) {
       // Verify the token with the backend
-      fetch('http://localhost:3001/api/auth/google/verify', {
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/google/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

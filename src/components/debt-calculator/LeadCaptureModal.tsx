@@ -139,7 +139,7 @@ export const LeadCaptureModal: React.FC<LeadCaptureModalProps> = ({
       };
 
       // Send lead data to backend
-      const leadResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads`, {
+      const leadResponse = await fetch(`${import.meta.env.VITE_API_URL }/api/leads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ export const LeadCaptureModal: React.FC<LeadCaptureModalProps> = ({
 
       if (signupResult.success && createdLeadId) {
         // If signup successful, convert lead to user AND transfer debt data in one request
-        const convertResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${createdLeadId}/convert`, {
+        const convertResponse = await fetch(`${import.meta.env.VITE_API_URL }/api/leads/${createdLeadId}/convert`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

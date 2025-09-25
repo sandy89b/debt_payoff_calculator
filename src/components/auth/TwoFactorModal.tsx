@@ -24,7 +24,7 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({ isOpen, tempToke
     }
     try {
       setSubmitting(true);
-      const res = await fetch('http://localhost:3001/api/auth/verify-2fa', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/verify-2fa`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tempToken, twoFactorToken: code })
